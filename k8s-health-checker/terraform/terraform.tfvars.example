@@ -2,7 +2,7 @@
 # terraform.tfvars is gitignored to avoid committing account-specific values.
 
 aws_region      = "us-east-1"
-cluster_name    = "health-checker-cluster"
+cluster_name    = "gratitude-health-cluster"
 cluster_version = "1.30"
 
 # Cost-optimized defaults — 2x t3.medium nodes
@@ -11,3 +11,5 @@ node_desired_size  = 2
 node_min_size      = 1
 node_max_size      = 3
 node_disk_size     = 20
+
+enable_ingress_nginx = true

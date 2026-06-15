@@ -2,8 +2,8 @@
 #
 # scripts/01-provision-eks.sh
 #
-# Provisions the EKS cluster + VPC using Terraform and configures
-# kubectl to point at it.
+# Provisions the EKS cluster + VPC + EBS CSI driver + ingress-nginx
+# via Terraform, and configures kubectl to point at it.
 #
 # Prerequisites:
 #   - AWS CLI configured (aws configure) with credentials that can
@@ -28,7 +28,7 @@ terraform init
 echo "==> Planning..."
 terraform plan -out=tfplan
 
-echo "==> Applying (this provisions a VPC + EKS cluster + node group, ~10-15 min)..."
+echo "==> Applying (this provisions a VPC + EKS cluster + node group + addons, ~15-20 min)..."
 terraform apply tfplan
 
 echo "==> Configuring kubectl..."
@@ -38,5 +38,9 @@ aws eks update-kubeconfig --region "$REGION" --name "$CLUSTER_NAME"
 
 echo "==> Verifying cluster access..."
 kubectl get nodes
+
+echo "==> Verifying EBS CSI driver and ingress-nginx..."
+kubectl get pods -n kube-system | grep ebs-csi || true
+kubectl get pods -n ingress-nginx || true
 
 echo "==> Done. Cluster '$CLUSTER_NAME' is ready."

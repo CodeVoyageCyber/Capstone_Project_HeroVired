@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package moods;
+
+service Moods {
+  rpc CreateMood (CreateMoodRequest) returns (MoodEntry);
+  rpc ListMoods (ListMoodsRequest) returns (MoodList);
+}
+
+message CreateMoodRequest {
+  string mood = 1;
+  string note = 2;
+}
+
+message ListMoodsRequest {
+  int32 limit = 1;
+}
+
+message MoodEntry {
+  int32 id = 1;
+  string mood = 2;
+  string note = 3;
+  string created_at = 4;
+}
+
+message MoodList {
+  repeated MoodEntry moods = 1;
+}
+

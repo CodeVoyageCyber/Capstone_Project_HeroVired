@@ -1,6 +1,10 @@
-# Cost-conscious values for kube-prometheus-stack on a 2x t3.medium EKS cluster.
-# Retention is kept short and resource requests modest so Prometheus +
-# Grafana + Alertmanager fit comfortably alongside the health-checker app.
+# Cost-conscious values for kube-prometheus-stack on a 2x t3.medium
+# EKS cluster, sized to fit alongside GratitudeApp's 9 microservices +
+# Postgres + the health-checker.
+#
+# podMonitorSelectorNilUsesHelmValues / similar selectors are left at
+# their defaults; the health-checker pod is scraped via the
+# prometheus.io/scrape annotations (additionalScrapeConfigs below).
 
 prometheus:
   prometheusSpec:
@@ -15,10 +19,29 @@ prometheus:
     storageSpec:
       volumeClaimTemplate:
         spec:
+          storageClassName: gp3
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
               storage: 5Gi
+
+    additionalScrapeConfigs:
+      - job_name: "health-checker"
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
 
 grafana:
   adminPassword: changeme

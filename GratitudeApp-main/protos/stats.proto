@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package stats;
+
+service Stats {
+  rpc GetOverview (GetOverviewRequest) returns (Overview);
+}
+
+message GetOverviewRequest {}
+
+message EntryCount {
+  string date = 1;
+  int32 count = 2;
+}
+
+message MoodSummary {
+  string mood = 1;
+  int32 count = 2;
+}
+
+message Overview {
+  int32 total_entries = 1;
+  int32 entries_today = 2;
+  int32 streak_days = 3;
+  repeated EntryCount last7_days = 4;
+  repeated MoodSummary mood_trend = 5;
+}
+

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-checker-deployment
+  namespace: default
+  labels:
+    component: health-checker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: health-checker
+  template:
+    metadata:
+      labels:
+        component: health-checker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: health-checker
+      containers:
+        - name: health-checker
+          image: <YOUR_ECR_OR_DOCKERHUB_IMAGE>:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: TARGET_NAMESPACE
+              value: "default"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-checker-cluster-ip-service
+  namespace: default
+  labels:
+    component: health-checker
+spec:
+  selector:
+    component: health-checker
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP

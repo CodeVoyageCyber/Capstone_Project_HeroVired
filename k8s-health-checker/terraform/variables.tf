@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "cluster_name" {
   description = "Name of the EKS cluster"
   type        = string
-  default     = "health-checker-cluster"
+  default     = "gratitude-health-cluster"
 }
 
 variable "cluster_version" {
@@ -56,4 +56,10 @@ variable "node_disk_size" {
   description = "Disk size (GB) for worker nodes"
   type        = number
   default     = 20
+}
+
+variable "enable_ingress_nginx" {
+  description = "Whether to install the ingress-nginx controller via Helm"
+  type        = bool
+  default     = true
 }

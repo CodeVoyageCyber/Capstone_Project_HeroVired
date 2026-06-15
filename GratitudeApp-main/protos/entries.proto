@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package entries;
+
+service Entries {
+  rpc CreateEntry (CreateEntryRequest) returns (Entry);
+  rpc ListEntries (ListEntriesRequest) returns (EntriesList);
+}
+
+message CreateEntryRequest {
+  string text = 1;
+}
+
+message ListEntriesRequest {
+  int32 limit = 1;
+}
+
+message Entry {
+  int32 id = 1;
+  string text = 2;
+  string created_at = 3;
+}
+
+message EntriesList {
+  repeated Entry entries = 1;
+}
+

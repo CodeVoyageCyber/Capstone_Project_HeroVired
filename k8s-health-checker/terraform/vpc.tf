@@ -18,16 +18,16 @@ module "vpc" {
 
   # Required tags for EKS to discover subnets for load balancers
   public_subnet_tags = {
-    "kubernetes.io/role/elb"                     = "1"
-    "kubernetes.io/cluster/${var.cluster_name}"  = "shared"
+    "kubernetes.io/role/elb"                    = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
 
   private_subnet_tags = {
-    "kubernetes.io/role/internal-elb"            = "1"
-    "kubernetes.io/cluster/${var.cluster_name}"  = "shared"
+    "kubernetes.io/role/internal-elb"           = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
 
   tags = {
-    Project = "k8s-health-checker"
+    Project = "gratitude-health-checker"
   }
 }

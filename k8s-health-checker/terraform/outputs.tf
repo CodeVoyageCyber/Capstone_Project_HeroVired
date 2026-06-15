@@ -14,6 +14,11 @@ output "cluster_certificate_authority_data" {
   sensitive   = true
 }
 
+output "oidc_provider_arn" {
+  description = "ARN of the OIDC provider for IRSA (used by files-service-sa, FIS, etc.)"
+  value       = module.eks.oidc_provider_arn
+}
+
 output "region" {
   description = "AWS region the cluster was deployed in"
   value       = var.aws_region

@@ -1,0 +1,16 @@
+/* Global app layout */
+.main {
+  padding: 24px 16px;
+  background: #f8fafc;
+  min-height: calc(100vh - 60px);
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+}
