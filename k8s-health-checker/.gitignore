@@ -1,0 +1,25 @@
+# Binaries
+/bin/
+/dist/
+
+# Go workspace / vendor
+vendor/
+*.exe
+
+# Environment / secrets
+.env
+*.kubeconfig
+kubeconfig*
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Helm / temp values overrides with secrets
+deploy/prometheus/*-local.yaml

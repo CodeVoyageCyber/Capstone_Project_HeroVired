@@ -1,0 +1,34 @@
+# Minimal, cost-conscious values for kube-prometheus-stack
+# Used for local/dev clusters (kind/minikube). Tune resources up
+# for production clusters.
+
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+grafana:
+  adminPassword: changeme
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 100m
+        memory: 256Mi
