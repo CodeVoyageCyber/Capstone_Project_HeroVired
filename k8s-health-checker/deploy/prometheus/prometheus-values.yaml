@@ -1,10 +1,10 @@
-# Minimal, cost-conscious values for kube-prometheus-stack
-# Used for local/dev clusters (kind/minikube). Tune resources up
-# for production clusters.
+# Cost-conscious values for kube-prometheus-stack on a 2x t3.medium EKS cluster.
+# Retention is kept short and resource requests modest so Prometheus +
+# Grafana + Alertmanager fit comfortably alongside the health-checker app.
 
 prometheus:
   prometheusSpec:
-    retention: 7d
+    retention: 3d
     resources:
       requests:
         cpu: 200m
@@ -12,9 +12,18 @@ prometheus:
       limits:
         cpu: 500m
         memory: 1Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
 
 grafana:
   adminPassword: changeme
+  persistence:
+    enabled: false
   resources:
     requests:
       cpu: 100m

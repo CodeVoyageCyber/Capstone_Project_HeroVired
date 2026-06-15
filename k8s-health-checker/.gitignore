@@ -1,25 +1,26 @@
-# Binaries
-/bin/
-/dist/
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/tfplan
+terraform/terraform.tfvars
+terraform/crash.log
 
-# Go workspace / vendor
-vendor/
-*.exe
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
 
-# Environment / secrets
-.env
+# Kubeconfig / secrets
 *.kubeconfig
 kubeconfig*
-
-# Logs
-*.log
-
-# IDE
-.vscode/
-.idea/
+.env
 
 # OS
 .DS_Store
 
-# Helm / temp values overrides with secrets
-deploy/prometheus/*-local.yaml
+# IDE
+.vscode/
+.idea/
