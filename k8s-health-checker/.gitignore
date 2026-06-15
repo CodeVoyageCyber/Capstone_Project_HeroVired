@@ -1,12 +1,3 @@
-# Terraform
-terraform/.terraform/
-terraform/.terraform.lock.hcl
-terraform/*.tfstate
-terraform/*.tfstate.*
-terraform/tfplan
-terraform/terraform.tfvars
-terraform/crash.log
-
 # Python
 __pycache__/
 *.pyc

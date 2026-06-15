@@ -1,0 +1,46 @@
+# eksctl cluster config for hosting GratitudeApp + the health-checker.
+#
+# Cost-conscious defaults: 2x t3.medium managed nodes, single NAT
+# gateway (eksctl's default "Single" mode), OIDC enabled for IRSA
+# (needed by the EBS CSI driver and, later, files-service-sa / FIS).
+#
+# Create the cluster:
+#   eksctl create cluster -f eksctl/cluster.yaml
+#
+# Delete it:
+#   eksctl delete cluster -f eksctl/cluster.yaml
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: gratitude-health-cluster
+  region: us-east-1
+  version: "1.30"
+
+iam:
+  withOIDC: true
+
+vpc:
+  nat:
+    gateway: Single # cost optimization: 1 NAT instead of 1-per-AZ
+
+managedNodeGroups:
+  - name: default-ng
+    instanceType: t3.medium
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 3
+    volumeSize: 20
+    labels:
+      role: gratitude-health-worker
+    tags:
+      Project: gratitude-health-checker
+
+addons:
+  - name: vpc-cni
+  - name: coredns
+  - name: kube-proxy
+  - name: aws-ebs-csi-driver
+    wellKnownPolicies:
+      ebsCSIController: true

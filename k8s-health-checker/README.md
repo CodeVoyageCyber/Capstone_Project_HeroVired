@@ -56,7 +56,7 @@ These run as-is using the existing Docker Hub images
 
 | Tool | Purpose |
 |---|---|
-| Terraform | Provision EKS cluster, VPC, EBS CSI driver, ingress-nginx |
+| eksctl | Provision EKS cluster, VPC, EBS CSI driver addon, OIDC |
 | Amazon EKS | Managed Kubernetes cluster hosting GratitudeApp + health-checker |
 | Python (FastAPI) | Health-checker API, monitoring, and self-healing logic |
 | Kubernetes Python client | Interact with and manage cluster resources |
@@ -89,14 +89,8 @@ k8s-health-checker/
 │   ├── rbac.yml
 │   ├── fis-sa-cluster-admin.yml
 │   └── fis-experiement-cluster-admin.yml
-├── terraform/                   # Infrastructure as Code for EKS
-│   ├── versions.tf
-│   ├── variables.tf
-│   ├── vpc.tf
-│   ├── eks.tf                    # EKS + OIDC + EBS CSI driver addon
-│   ├── ingress-nginx.tf          # ingress-nginx via Helm
-│   ├── outputs.tf
-│   └── terraform.tfvars.example
+├── eksctl/                       # EKS cluster config
+│   └── cluster.yaml               # eksctl ClusterConfig (VPC, node group, OIDC, EBS CSI addon)
 ├── deploy/
 │   ├── healthchecker/
 │   │   ├── rbac.yaml             # health-checker ServiceAccount + ClusterRole
@@ -118,7 +112,7 @@ k8s-health-checker/
 ## Prerequisites
 
 - AWS account + AWS CLI configured (`aws configure`)
-- Terraform >= 1.5
+- `eksctl`
 - `kubectl`
 - `helm` 3.x
 - Docker (for the health-checker image only — GratitudeApp uses
@@ -168,28 +162,29 @@ get GratitudeApp running on EKS.
    FastAPI health-checker service we're building), `gratitude-k8s/`
    (the existing GratitudeApp Kubernetes manifests, used as-is),
    `chaos/` (AWS FIS templates for fault injection, used in Sprint 3),
-   `terraform/` (EKS infrastructure as code), `deploy/` (manifests and
+   `eksctl/` (EKS cluster config), `deploy/` (manifests and
    Helm values for the health-checker and Prometheus stack), and
    `scripts/` (numbered, ordered automation scripts).
 
-2. **Kubernetes cluster access configured via Terraform on EKS.**
-   `terraform/` defines:
-   - `vpc.tf` — a VPC with 2 public and 2 private subnets across 2
-     AZs, using a **single NAT gateway** to minimize cost.
-   - `eks.tf` — an EKS cluster (`module "eks"`) with one managed node
-     group of **2x t3.medium** nodes (min 1, max 3 — headroom for
-     Sprint 4's scaling demo), an **OIDC provider** (`enable_irsa =
-     true`, needed for IRSA-based access such as the EBS CSI driver
-     now and files-service-sa / FIS later), and the **aws-ebs-csi-driver
-     addon** (required by GratitudeApp's `gp3` StorageClass and
-     Postgres PVC).
-   - `ingress-nginx.tf` — installs the `ingress-nginx` controller via
-     Helm (matching GratitudeApp's `ingressClassName: nginx`), exposed
-     via an AWS Network Load Balancer.
-   - `variables.tf` / `terraform.tfvars.example` — all sizing and
-     naming is parameterized.
-   - `outputs.tf` — exposes the cluster name, endpoint, OIDC provider
-     ARN, and a ready-to-run `aws eks update-kubeconfig` command.
+2. **Kubernetes cluster access configured via eksctl on EKS.**
+   `eksctl/cluster.yaml` defines a single `ClusterConfig` that
+   provisions everything needed in one command:
+   - A VPC with a **single NAT gateway** (`vpc.nat.gateway: Single`)
+     to minimize cost.
+   - One managed node group of **2x t3.medium** nodes (min 1, max 3 —
+     headroom for Sprint 4's scaling demo), with a 20GB disk each.
+   - **OIDC provider enabled** (`iam.withOIDC: true`), needed for
+     IRSA-based access such as the EBS CSI driver now and
+     files-service-sa / FIS later.
+   - The **aws-ebs-csi-driver addon** with `wellKnownPolicies`
+     (required by GratitudeApp's `gp3` StorageClass and Postgres PVC) —
+     eksctl automatically creates the IAM role and IRSA binding for
+     this addon.
+   `scripts/01-provision-eks.sh` runs `eksctl create cluster -f
+   eksctl/cluster.yaml` (which also configures kubectl automatically),
+   then installs **ingress-nginx** via Helm (matching GratitudeApp's
+   `ingressClassName: nginx`), exposed via an AWS Network Load
+   Balancer.
 
 3. **GratitudeApp deployed using its existing manifests and images.**
    `gratitude-k8s/` contains the original manifests from the
@@ -236,7 +231,7 @@ get GratitudeApp running on EKS.
 **How to run Sprint 1 end-to-end:**
 
 ```bash
-# 1. Provision the EKS cluster (VPC + EKS + node group + EBS CSI + ingress-nginx)
+# 1. Provision the EKS cluster (eksctl: VPC + EKS + node group + EBS CSI + ingress-nginx)
 ./scripts/01-provision-eks.sh
 
 # 2. Review/update secrets (see docs/SECRETS.md)
@@ -273,8 +268,8 @@ kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80 &
 ./scripts/99-teardown.sh
 ```
 
-**Deliverable:** Terraform-provisioned EKS cluster on AWS (with EBS
-CSI driver, OIDC, and ingress-nginx), GratitudeApp's 9 microservices +
+**Deliverable:** eksctl-provisioned EKS cluster on AWS (with EBS CSI
+driver, OIDC, and ingress-nginx), GratitudeApp's 9 microservices +
 Postgres running and reachable via ingress, RBAC configured for the
 health-checker ServiceAccount, a FastAPI health-checker deployed to the
 cluster that successfully lists GratitudeApp's nodes/pods/deployments
@@ -335,7 +330,7 @@ automatically, optimizing cluster performance and cost.
 **Planned work:**
 - Integrate the Kubernetes Cluster Autoscaler (or Karpenter) on EKS so
   the node group (min 1 / max 3, already configured in
-  `terraform/variables.tf`) can scale up/down based on demand.
+  `eksctl/cluster.yaml`) can scale up/down based on demand.
 - Configure Horizontal Pod Autoscalers for GratitudeApp's
   higher-traffic services (e.g. `api-gateway`, `client`).
 - Add resource-balancing logic to redistribute pods across nodes.
@@ -392,8 +387,8 @@ environments.
 - Real-Time Alerting and Notifications through Slack
 - Web Dashboard (Grafana) for real-time and historical monitoring
 - Comprehensive Documentation for setup, usage, and troubleshooting
-- Terraform IaC for reproducible, cost-controlled EKS provisioning and
-  teardown
+- eksctl-based cluster config for reproducible, cost-controlled EKS
+  provisioning and teardown
 
 ## Evaluation Criteria
 

@@ -2,45 +2,42 @@
 #
 # scripts/01-provision-eks.sh
 #
-# Provisions the EKS cluster + VPC + EBS CSI driver + ingress-nginx
-# via Terraform, and configures kubectl to point at it.
+# Provisions the EKS cluster (with OIDC + EBS CSI driver addon) via
+# eksctl, configures kubectl, and installs ingress-nginx via Helm.
 #
 # Prerequisites:
 #   - AWS CLI configured (aws configure) with credentials that can
-#     create VPC/EKS/IAM resources
-#   - Terraform >= 1.5
+#     create VPC/EKS/IAM/EC2 resources
+#   - eksctl
 #   - kubectl
+#   - helm
 
 set -euo pipefail
 
-TF_DIR="$(cd "$(dirname "$0")/../terraform" && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-cd "$TF_DIR"
-
-if [ ! -f terraform.tfvars ]; then
-  echo "==> No terraform.tfvars found. Copying from terraform.tfvars.example"
-  cp terraform.tfvars.example terraform.tfvars
-fi
-
-echo "==> Initializing Terraform..."
-terraform init
-
-echo "==> Planning..."
-terraform plan -out=tfplan
-
-echo "==> Applying (this provisions a VPC + EKS cluster + node group + addons, ~15-20 min)..."
-terraform apply tfplan
-
-echo "==> Configuring kubectl..."
-CLUSTER_NAME=$(terraform output -raw cluster_name)
-REGION=$(terraform output -raw region)
-aws eks update-kubeconfig --region "$REGION" --name "$CLUSTER_NAME"
+echo "==> Creating EKS cluster via eksctl (this takes ~15-20 min)..."
+eksctl create cluster -f "$ROOT_DIR/eksctl/cluster.yaml"
 
 echo "==> Verifying cluster access..."
 kubectl get nodes
 
-echo "==> Verifying EBS CSI driver and ingress-nginx..."
+echo "==> Verifying EBS CSI driver addon..."
 kubectl get pods -n kube-system | grep ebs-csi || true
-kubectl get pods -n ingress-nginx || true
 
-echo "==> Done. Cluster '$CLUSTER_NAME' is ready."
+echo "==> Adding ingress-nginx Helm repo..."
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx >/dev/null 2>&1 || true
+helm repo update
+
+echo "==> Installing ingress-nginx (NLB)..."
+helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx --create-namespace \
+  --set controller.service.type=LoadBalancer \
+  --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"=nlb \
+  --set controller.resources.requests.cpu=100m \
+  --set controller.resources.requests.memory=128Mi
+
+echo "==> Waiting for ingress-nginx controller to become ready..."
+kubectl wait --for=condition=Ready pods --all -n ingress-nginx --timeout=180s || true
+
+echo "==> Done. Cluster 'gratitude-health-cluster' is ready."
