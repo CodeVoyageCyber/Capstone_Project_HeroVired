@@ -1,5 +1,17 @@
 # GratitudeApp — Kubernetes Cluster Health Checker and Auto-Healing
 
+## Architecture
+
+![Architecture Diagram](docs/diagrams/architecture.png)
+
+> **Key layers (left → right):**
+> 1. **GratitudeApp** — 9-service MERN/gRPC microservices in the `default` namespace, reachable via ingress-nginx NLB.
+> 2. **Health Checker** (FastAPI/Python) — polls the Kubernetes API every 15 s, exposes Prometheus metrics, and provides REST endpoints for live cluster state.
+> 3. **Monitoring stack** (`monitoring` namespace) — Prometheus scrapes `/metrics`, Grafana visualises dashboards, Alertmanager routes alerts to Slack.
+> 4. **AWS services** — ECR (health-checker image), S3 (file uploads), FIS (chaos / fault injection for self-healing validation).
+
+---
+
 This project hosts **GratitudeApp** (a 9-service MERN/gRPC
 microservices app) on Amazon EKS, and builds an automated **health
 monitoring and self-healing tool** around it. The health-checker
