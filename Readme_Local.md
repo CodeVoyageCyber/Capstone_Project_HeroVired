@@ -108,6 +108,9 @@ minikube start \
 > **Minimum specs:** 4 CPUs and 6 GB RAM allocated to minikube. The monitoring
 > stack alone (Prometheus 512 Mi + Grafana 256 Mi + Alertmanager 128 Mi) uses
 > ~1 GB, and the 9 GratitudeApp services + Postgres use another ~1.5 GB.
+>
+> <img width="2114" height="950" alt="image" src="https://github.com/user-attachments/assets/5af54af6-80ab-45a8-b40d-773061dff428" />
+
 
 ### Enable required addons
 
@@ -136,7 +139,10 @@ kubectl get nodes
 kubectl get pods -n ingress-nginx
 # Expected: ingress-nginx-controller-xxx pod in Running state
 ```
+<img width="1142" height="220" alt="image" src="https://github.com/user-attachments/assets/07ba5a14-7b56-4f64-9c74-55676fe1accc" />
+<img width="1180" height="106" alt="image" src="https://github.com/user-attachments/assets/612d96e2-1fe7-4917-9cf0-a160ae1c07d7" />
 
+<img width="1432" height="160" alt="image" src="https://github.com/user-attachments/assets/0b46d510-a732-4d5b-b90c-0819141ed85d" />
 ---
 
 ## 3. Create the Local StorageClass Override
@@ -184,6 +190,7 @@ kubectl get storageclass
 # gp3 (default)   k8s.io/minikube-hostpath   Delete          Immediate           5s
 # standard        k8s.io/minikube-hostpath   Delete          Immediate           2m
 ```
+<img width="1560" height="228" alt="image" src="https://github.com/user-attachments/assets/dc0087c6-5c83-48e0-957d-885082815877" />
 
 ---
 
@@ -267,6 +274,7 @@ spec:
   type: ClusterIP
 EOF
 ```
+<img width="1560" height="228" alt="image" src="https://github.com/user-attachments/assets/4ce01756-4d73-4631-8105-9d8a4b299abc" />
 
 ---
 
@@ -359,6 +367,11 @@ kubectl apply -f $K8S/postgres-migrate-job.yml
 echo "Waiting for all GratitudeApp pods (this can take 3-5 minutes on first pull)..."
 kubectl wait --for=condition=Ready pods --all -n default --timeout=300s
 ```
+<img width="1754" height="260" alt="image" src="https://github.com/user-attachments/assets/d01f71be-397f-4142-a43b-1726faa989b5" />
+<img width="2206" height="350" alt="image" src="https://github.com/user-attachments/assets/f82db870-0383-4555-8956-9ce541c580c0" />
+<img width="2202" height="1176" alt="image" src="https://github.com/user-attachments/assets/07fa2799-533d-4058-8893-c792cd188d99" />
+<img width="1918" height="272" alt="image" src="https://github.com/user-attachments/assets/77f08f99-55c9-4186-9256-f2287f9fe8e2" />
+<img width="1824" height="204" alt="image" src="https://github.com/user-attachments/assets/d10d16d9-98e2-403f-afed-609940717419" />
 
 ### Verify GratitudeApp pods
 
@@ -381,6 +394,7 @@ server-deployment-xxx                   1/1     Running   0          2m
 stats-api-deployment-xxx                1/1     Running   0          2m
 stats-service-deployment-xxx            1/1     Running   0          2m
 ```
+<img width="1600" height="516" alt="image" src="https://github.com/user-attachments/assets/bcb4238a-04cb-46d6-a250-0a11730b1c05" />
 
 ---
 
@@ -401,6 +415,7 @@ eval $(minikube docker-env)
 # Verify — you should see minikube's internal images
 docker images | grep k8s
 ```
+<img width="2454" height="582" alt="image" src="https://github.com/user-attachments/assets/6fe8e75d-0d76-431d-a7c7-c6c2cf2f745f" />
 
 ### Step 7.2 — Build the image
 
@@ -408,6 +423,7 @@ docker images | grep k8s
 docker build -t gratitude-health-checker:latest \
   k8s-health-checker/healthchecker-app/
 ```
+<img width="2182" height="1228" alt="image" src="https://github.com/user-attachments/assets/a53d24a7-3526-445d-a91c-5b63d8145666" />
 
 ### Step 7.3 — Confirm the image is visible inside minikube
 
@@ -415,6 +431,7 @@ docker build -t gratitude-health-checker:latest \
 minikube image ls | grep gratitude-health-checker
 # Expected: docker.io/library/gratitude-health-checker:latest
 ```
+<img width="2808" height="1420" alt="image" src="https://github.com/user-attachments/assets/b3c1353f-b70b-4b4e-994f-26b42a9e6a0d" />
 
 ### Step 7.4 — Reset Docker to your host daemon (optional)
 
@@ -462,6 +479,7 @@ kubectl get pods -n default -l component=health-checker
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 ```
+<img width="2184" height="248" alt="image" src="https://github.com/user-attachments/assets/b4ef1f9d-e29c-4a93-871f-098238ed937e" />
 
 ### Step 8.5 — Install kube-prometheus-stack
 
@@ -475,12 +493,16 @@ helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
 > created a local `gp3` StorageClass backed by hostpath in Step 3, this
 > will be provisioned automatically with no AWS dependency.
 
+<img width="2892" height="1030" alt="image" src="https://github.com/user-attachments/assets/294becdf-4c18-4e0f-a98f-aac8b8fcfcdd" />
+
 ### Step 8.6 — Wait for the monitoring stack
 
 ```bash
 echo "Waiting for Prometheus, Grafana, and Alertmanager (3-5 minutes)..."
 kubectl wait --for=condition=Ready pods --all -n monitoring --timeout=300s
 ```
+
+<img width="2150" height="260" alt="image" src="https://github.com/user-attachments/assets/baaa5e15-b4e0-4b26-a0b4-0ad5da864c37" />
 
 ### Step 8.7 — Confirm all pods are running
 
@@ -489,6 +511,8 @@ kubectl get pods -n default
 kubectl get pods -n monitoring
 kubectl get pods -n ingress-nginx
 ```
+
+<img width="1926" height="930" alt="image" src="https://github.com/user-attachments/assets/9463bd97-47bb-420f-8784-11e680200851" />
 
 ---
 
@@ -527,6 +551,10 @@ open "http://$MINIKUBE_IP"
 > # Then access via http://localhost (the tunnel maps port 80)
 > ```
 
+<img width="1590" height="376" alt="image" src="https://github.com/user-attachments/assets/0135a110-2aeb-454d-86eb-f077a62b95c5" />
+
+<img width="2694" height="1864" alt="image" src="https://github.com/user-attachments/assets/3c16beda-7e58-4d34-948e-af71dfbd78c6" />
+
 ### 9.3 Port-forward the health-checker API
 
 ```bash
@@ -538,6 +566,10 @@ curl http://localhost:8000/healthz
 # Expected: {"status":"ok"}
 ```
 
+<img width="2210" height="186" alt="image" src="https://github.com/user-attachments/assets/a5513b0b-40dd-4377-985e-a8f23e762ae4" />
+
+<img width="353" height="106" alt="image" src="https://github.com/user-attachments/assets/229829c8-1e79-413b-a9f5-cc96fb1606b1" />
+
 ### 9.4 Port-forward Grafana
 
 ```bash
@@ -546,6 +578,10 @@ open http://localhost:3000
 # Username: admin   Password: changeme
 ```
 
+<img width="2026" height="138" alt="image" src="https://github.com/user-attachments/assets/3031e774-203f-4fdc-aa57-0308ed3afc92" />
+
+<img width="3412" height="1776" alt="image" src="https://github.com/user-attachments/assets/a192f919-5cb7-44ba-a250-ae76cf00ac4b" />
+
 ### 9.5 Port-forward Prometheus
 
 ```bash
@@ -553,6 +589,8 @@ kubectl port-forward -n monitoring \
   svc/monitoring-kube-prometheus-prometheus 9090:9090 &
 open http://localhost:9090
 ```
+
+<img width="1700" height="178" alt="image" src="https://github.com/user-attachments/assets/576e7fd0-1947-4b62-9e8c-f89e714559cd" />
 
 ---
 
@@ -583,6 +621,14 @@ curl http://localhost:8000/metrics | grep "^healthchecker" | \
   awk -F'{' '{print $1}' | sort -u
 ```
 
+<img width="390" height="98" alt="image" src="https://github.com/user-attachments/assets/28480976-3b23-49f8-a6e0-6458be4ff030" />
+
+<img width="3330" height="448" alt="image" src="https://github.com/user-attachments/assets/c51179b3-83fd-4448-b526-8cbb90c5b8f9" />
+
+<img width="1406" height="1884" alt="image" src="https://github.com/user-attachments/assets/4c135538-74d5-49e1-84c2-ac56c5602f5f" />
+
+<img width="3340" height="378" alt="image" src="https://github.com/user-attachments/assets/75d7438c-0a70-4cfe-a5a7-7889fa017576" />
+
 Expected metric names:
 
 ```
@@ -592,6 +638,7 @@ healthchecker_node_ready
 healthchecker_pod_phase_running
 healthchecker_pod_restarts_total
 ```
+<img width="1752" height="1736" alt="image" src="https://github.com/user-attachments/assets/80d51ec2-d52e-4c71-9ec6-49515ba64c9e" />
 
 ### 10.2 Prometheus is scraping the health-checker
 
@@ -599,6 +646,7 @@ healthchecker_pod_restarts_total
 open http://localhost:9090/targets
 # Look for job="health-checker" in state UP
 ```
+<img width="3404" height="1860" alt="image" src="https://github.com/user-attachments/assets/931c8d71-135a-4d73-8f6f-ec4772afd5a2" />
 
 Run a test query in Prometheus:
 
@@ -612,7 +660,9 @@ healthchecker_node_ready
 1. Open `http://localhost:3000` → log in as `admin / changeme`
 2. Go to **Explore** → datasource **Prometheus**
 3. Query: `healthchecker_node_ready` → should return data
+<img width="2824" height="1766" alt="image" src="https://github.com/user-attachments/assets/0c72a7a1-6ae7-4d51-b825-b940344639a5" />
 4. Go to **Dashboards → Browse → Kubernetes / Compute Resources / Cluster**
+<img width="3406" height="1888" alt="image" src="https://github.com/user-attachments/assets/8a5acf18-235b-4936-abcf-98e4893b31e2" />
 
 ### 10.4 GratitudeApp ingress routing
 
@@ -627,6 +677,7 @@ curl "http://$MINIKUBE_IP/api/journal/"
 curl -s -o /dev/null -w "%{http_code}" "http://$MINIKUBE_IP/"
 # Expected: 200
 ```
+<img width="819" height="184" alt="image" src="https://github.com/user-attachments/assets/53fd5f93-3667-4734-ac13-2dbe72ac48ea" />
 
 ### 10.5 PVC is bound (local storage working)
 
@@ -637,6 +688,7 @@ kubectl get pvc -n default
 kubectl get pvc -n monitoring
 # Expected: prometheus-monitoring-kube-prometheus-prometheus-0   Bound   ...   gp3
 ```
+<img width="2214" height="384" alt="image" src="https://github.com/user-attachments/assets/d21346bc-b3ec-4139-81dc-253ff9420b6d" />
 
 ---
 
@@ -689,6 +741,7 @@ kubectl delete -f k8s-local/storageclass-local.yaml
 minikube stop
 # Cluster is paused — restart with: minikube start
 ```
+<img width="625" height="77" alt="image" src="https://github.com/user-attachments/assets/c2c52071-ca78-4fec-8f63-d117dd0c3ce5" />
 
 ### 11.3 Delete minikube entirely (wipes all data)
 
