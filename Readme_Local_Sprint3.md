@@ -173,10 +173,8 @@ kubectl get sa -n default fis-sa
 ```
 
 ### Screenshot — AWS FIS RBAC Applied
-
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot showing `kubectl apply` output for the three chaos RBAC manifests and `kubectl get sa -n default fis-sa`._
-> _Suggested filename: `docs/screenshots/sprint3-fis-rbac.png`_
+> showing `kubectl apply` output for the three chaos RBAC manifests and `kubectl get sa -n default fis-sa`._
+<img width="3048" height="402" alt="image" src="https://github.com/user-attachments/assets/3c89655f-b368-4b08-b555-5203f67fcf59" />
 
 ---
 
@@ -229,9 +227,8 @@ kubectl logs -n default -l component=health-checker --tail=25
 
 ### Screenshot — Health-Checker Sprint 3 Pod Running & Logs
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot showing `kubectl rollout status` and `kubectl logs` confirming Sprint 3 health-checker is running._
-> _Suggested filename: `docs/screenshots/sprint3-healthchecker-running.png`_
+> showing `kubectl rollout status` and `kubectl logs` confirming Sprint 3 health-checker is running._
+<img width="2562" height="694" alt="image" src="https://github.com/user-attachments/assets/2117281a-e462-47a6-b176-0cfbfd93b3e0" />
 
 ---
 
@@ -392,9 +389,9 @@ kubectl delete deployment chaos-crashloop-test -n default
 
 ### Screenshot — CrashLoopBackOff Detection & Auto-Recovery
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot showing `kubectl get pods` with the crashlooping pod and health-checker logs recording the auto-recovery._
-> _Suggested filename: `docs/screenshots/sprint3-crashloop-healing.png`_
+> showing `kubectl get pods` with the crashlooping pod and health-checker logs recording the auto-recovery._
+<img width="1932" height="830" alt="image" src="https://github.com/user-attachments/assets/e4d597e6-ea95-4a26-979e-102182800a6f" />
+<img width="3254" height="1340" alt="image" src="https://github.com/user-attachments/assets/dc25769d-892d-49d7-b549-edf6fae72d49" />
 
 ---
 
@@ -450,10 +447,9 @@ Expected output:
 
 ### Screenshot — Evicted Pod Automated Cleanup
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `kubectl get pod` showing Evicted status followed by automated deletion and the `/api/healing-log` entry._
-> _Suggested filename: `docs/screenshots/sprint3-evicted-cleanup.png`_
-
+> `kubectl get pod` showing Evicted status followed by automated deletion and the `/api/healing-log` entry._
+<img width="1840" height="694" alt="image" src="https://github.com/user-attachments/assets/8f9dbeec-5245-4d15-9c1d-151256fd104c" />
+<img width="2646" height="1968" alt="image" src="https://github.com/user-attachments/assets/89dcec71-b4ae-4ba6-b417-357e78b4fe1b" />
 ---
 
 ### 9.4 Scenario 4: CPU Stress Simulation on `server-deployment` (matching AWS FIS)
@@ -482,9 +478,8 @@ kubectl delete pod fis-cpu-stress -n default --ignore-not-found
 
 ### Screenshot — Local Chaos Stress Simulation
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `fis-cpu-stress` running and Grafana metrics reflecting the CPU load._
-> _Suggested filename: `docs/screenshots/sprint3-chaos-stress.png`_
+> `fis-cpu-stress` running and Grafana metrics reflecting the CPU load._
+<img width="2852" height="354" alt="image" src="https://github.com/user-attachments/assets/3e9ff710-91ca-4b7e-920e-bbff99d959e7" />
 
 ---
 
@@ -495,12 +490,6 @@ kubectl delete pod fis-cpu-stress -n default --ignore-not-found
 ```bash
 curl -s http://localhost:8000/api/healing-log | python3 -m json.tool
 ```
-
-### Screenshot — `/api/healing-log` JSON Response
-
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of terminal showing the full formatted JSON response from `GET /api/healing-log`._
-> _Suggested filename: `docs/screenshots/sprint3-healing-log-api.png`_
 
 ---
 
@@ -520,10 +509,8 @@ healthchecker_healing_actions_total{action="cleanup_evicted_pod",namespace="defa
 
 ### Screenshot — Prometheus Metrics Endpoint
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `curl http://localhost:8000/metrics` displaying the `healthchecker_healing_actions_total` counter._
-> _Suggested filename: `docs/screenshots/sprint3-metrics-healing.png`_
-
+> `curl http://localhost:8000/metrics` displaying the `healthchecker_healing_actions_total` counter._
+<img width="2826" height="320" alt="image" src="https://github.com/user-attachments/assets/cda42f3f-151e-415f-9a51-d11e4c8531f5" />
 ---
 
 ## 11. Step-by-Step Screenshot Guide
