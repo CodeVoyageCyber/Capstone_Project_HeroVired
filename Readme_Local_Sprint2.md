@@ -304,9 +304,10 @@ The dashboard includes 5 panels:
 
 ### Screenshot — Grafana Dashboard
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of the "GratitudeApp — Node & Pod Health" Grafana dashboard here._
-> _Suggested filename: `docs/screenshots/sprint2-grafana-dashboard.png`_
+> "GratitudeApp — Node & Pod Health" Grafana dashboard here.
+<img width="3340" height="800" alt="image" src="https://github.com/user-attachments/assets/842a633d-8d13-454d-9c58-760f2b2297e1" />
+
+<img width="3404" height="1930" alt="image" src="https://github.com/user-attachments/assets/db37207a-97ab-420a-8c75-4720f4ee532f" />
 
 ---
 
@@ -359,9 +360,7 @@ kubectl port-forward svc/monitoring-kube-prometheus-prometheus 9090:9090 -n moni
 
 ### Screenshot — Prometheus Alert Rules
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of the Prometheus `/alerts` page showing the 4 Sprint 2 alert rules._
-> _Suggested filename: `docs/screenshots/sprint2-prometheus-alerts.png`_
+<img width="3390" height="1406" alt="image" src="https://github.com/user-attachments/assets/275f063a-10fa-43d1-b4c2-9382e72e1d83" />
 
 ---
 
@@ -400,11 +399,8 @@ kill %1
 ```
 
 ### Screenshot — `/metrics` endpoint output
+<img width="1860" height="1878" alt="image" src="https://github.com/user-attachments/assets/c093e773-5608-40db-a599-d3ac97dec364" />
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `curl http://localhost:8000/metrics` showing the new `healthchecker_pod_ready`
-> and `healthchecker_deployment_all_replicas_available` lines._
-> _Suggested filename: `docs/screenshots/sprint2-metrics-output.png`_
 
 ### 9.3 `/api/pods` now returns `ready` and `conditions` fields
 
@@ -434,13 +430,6 @@ Example pod object:
 }
 ```
 
-### Screenshot — `/api/pods` response
-
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `curl http://localhost:8000/api/pods | python3 -m json.tool` output
-> showing the new `ready` and `conditions` fields._
-> _Suggested filename: `docs/screenshots/sprint2-api-pods.png`_
-
 ### 9.4 `/api/summary` includes all three health dimensions
 
 ```bash
@@ -448,12 +437,6 @@ curl -s http://localhost:8000/api/summary | python3 -m json.tool
 # Expected: {"nodes": [...], "pods": [...], "deployments": [...]}
 # All deployments should show "available" == "desired"
 ```
-
-### Screenshot — `/api/summary` response
-
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `curl http://localhost:8000/api/summary | python3 -m json.tool`._
-> _Suggested filename: `docs/screenshots/sprint2-api-summary.png`_
 
 ### 9.5 Prometheus is scraping the health-checker
 
@@ -465,9 +448,8 @@ kubectl port-forward svc/monitoring-kube-prometheus-prometheus 9090:9090 -n moni
 
 ### Screenshot — Prometheus Targets
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `http://localhost:9090/targets` showing the `health-checker` job as `UP`._
-> _Suggested filename: `docs/screenshots/sprint2-prometheus-targets.png`_
+<img width="3382" height="896" alt="image" src="https://github.com/user-attachments/assets/bb17af20-da3e-4b8b-9587-2eaf4b2d94e9" />
+
 
 ### 9.6 Grafana dashboard is visible
 
@@ -476,12 +458,6 @@ kubectl port-forward svc/monitoring-grafana 3000:80 -n monitoring &
 # Open: http://localhost:3000
 # Navigate: Dashboards → GratitudeApp — Node & Pod Health
 ```
-
-### Screenshot — Grafana Dashboard Full View
-
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of the full dashboard with all 5 panels rendered._
-> _Suggested filename: `docs/screenshots/sprint2-grafana-full.png`_
 
 ---
 
@@ -511,10 +487,10 @@ Inactive → Pending (after ~30s) → Firing (after 1m)
 
 ### Screenshot — Alert FIRING
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `http://localhost:9090/alerts` with `GratitudeAppDeploymentDegraded`
-> in **FIRING** state after scaling `client-deployment` to 0._
-> _Suggested filename: `docs/screenshots/sprint2-alert-firing.png`_
+<img width="2086" height="120" alt="image" src="https://github.com/user-attachments/assets/a2927a07-80e7-4826-a3ea-b7c298859160" />
+<img width="3420" height="1376" alt="image" src="https://github.com/user-attachments/assets/30c5fedf-c96d-4741-bc13-3051791d4fd0" />
+<img width="3386" height="1382" alt="image" src="https://github.com/user-attachments/assets/2a77434b-a75f-4a0c-96dc-82549fa25dc2" />
+
 
 ### 10.2 Restore the deployment
 
@@ -523,13 +499,6 @@ kubectl scale deployment client-deployment --replicas=1 -n default
 kubectl rollout status deployment/client-deployment -n default
 # Once restored, the alert will return to Inactive state
 ```
-
-### Screenshot — Alert Resolved
-
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `http://localhost:9090/alerts` with `GratitudeAppDeploymentDegraded`
-> back to **Inactive** after restoring the deployment._
-> _Suggested filename: `docs/screenshots/sprint2-alert-resolved.png`_
 
 ---
 
