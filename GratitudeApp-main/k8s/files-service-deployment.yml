@@ -16,6 +16,7 @@ spec:
       containers:
         - name: files-service
           image: prashantdey/merndemoapp:fileservice1.0
+          imagePullPolicy: Never
           ports:
             - containerPort: 5004
           env:

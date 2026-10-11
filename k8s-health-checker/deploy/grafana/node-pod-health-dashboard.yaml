@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: node-pod-health-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"          # Grafana sidecar (grafana-sc-dashboard) picks this up
+data:
+  node-pod-health.json: |
+    {
+      "title": "GratitudeApp — Node & Pod Health",
+      "uid": "gratitude-health-v1",
+      "schemaVersion": 38,
+      "refresh": "30s",
+      "tags": ["gratitudeapp", "health"],
+      "panels": [
+        {
+          "id": 1,
+          "title": "Node Ready Status",
+          "type": "stat",
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "healthchecker_node_ready",
+              "legendFormat": "{{node}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {"text": "NOT READY", "color": "red"},
+                    "1": {"text": "Ready",     "color": "green"}
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red",   "value": 0},
+                  {"color": "green", "value": 1}
+                ]
+              },
+              "color": {"mode": "thresholds"}
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Pod Ready — GratitudeApp (default ns)",
+          "type": "table",
+          "gridPos": {"h": 8, "w": 18, "x": 6, "y": 0},
+          "targets": [
+            {
+              "expr": "healthchecker_pod_ready{namespace=\"default\"}",
+              "legendFormat": "{{pod}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {"text": "NOT READY", "color": "red"},
+                    "1": {"text": "Ready",     "color": "green"}
+                  }
+                }
+              ]
+            }
+          },
+          "transformations": [{"id": "organize", "options": {}}]
+        },
+        {
+          "id": 3,
+          "title": "Deployment — All Replicas Available",
+          "type": "stat",
+          "gridPos": {"h": 5, "w": 24, "x": 0, "y": 8},
+          "targets": [
+            {
+              "expr": "healthchecker_deployment_all_replicas_available{namespace=\"default\"}",
+              "legendFormat": "{{deployment}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {"text": "DEGRADED", "color": "red"},
+                    "1": {"text": "OK",       "color": "green"}
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red",   "value": 0},
+                  {"color": "green", "value": 1}
+                ]
+              },
+              "color": {"mode": "thresholds"}
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Available vs Desired Replicas",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 13},
+          "targets": [
+            {
+              "expr": "healthchecker_deployment_available_replicas{namespace=\"default\"}",
+              "legendFormat": "available — {{deployment}}"
+            },
+            {
+              "expr": "healthchecker_deployment_desired_replicas{namespace=\"default\"}",
+              "legendFormat": "desired — {{deployment}}"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Pod Restart Count",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 13},
+          "targets": [
+            {
+              "expr": "healthchecker_pod_restarts_total{namespace=\"default\"}",
+              "legendFormat": "{{pod}}"
+            }
+          ]
+        }
+      ]
+    }

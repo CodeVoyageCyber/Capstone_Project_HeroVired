@@ -22,12 +22,17 @@ spec:
       serviceAccountName: health-checker
       containers:
         - name: health-checker
-          image: <YOUR_ECR_OR_DOCKERHUB_IMAGE>:latest
+          image: health-checker:sprint3
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
           env:
             - name: TARGET_NAMESPACE
               value: "default"
+            - name: ENABLE_SELF_HEALING
+              value: "true"
+            - name: HEALING_COOLDOWN_SECONDS
+              value: "45"
           resources:
             requests:
               cpu: 50m

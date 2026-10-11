@@ -15,6 +15,7 @@ spec:
       containers:
         - name: api-gateway
           image: prashantdey/merndemoapp:apigatewayv1.0
+          imagePullPolicy: Never
           ports:
             - containerPort: 5000
           env:

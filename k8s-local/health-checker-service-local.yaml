@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-checker-cluster-ip-service
+  namespace: default
+  labels:
+    component: health-checker
+spec:
+  selector:
+    component: health-checker
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP

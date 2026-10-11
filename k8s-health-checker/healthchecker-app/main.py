@@ -22,13 +22,14 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from k8s_client import get_clients, list_deployments, list_nodes, list_pods
 from monitor import collect_once, start_background_poller
+from healer import get_healing_audit_log, scan_and_heal
 
 TARGET_NAMESPACE = os.environ.get("TARGET_NAMESPACE", "default")
 
 app = FastAPI(
     title="GratitudeApp Health Checker",
     description="Automated health monitoring and self-healing for the GratitudeApp Kubernetes deployment",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 
@@ -89,7 +90,28 @@ def get_summary(namespace: str = TARGET_NAMESPACE):
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.get("/api/healing-log")
+def get_healing_log(limit: int = 50):
+    """Structured audit log of all self-healing actions performed."""
+    try:
+        return {"healing_log": get_healing_audit_log(limit)}
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/heal")
+def trigger_heal(namespace: str = TARGET_NAMESPACE):
+    """Trigger an on-demand self-healing scan and recovery."""
+    try:
+        core, _ = get_clients()
+        actions = scan_and_heal(core, namespace)
+        return {"status": "ok", "actions_taken": actions}
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+

@@ -1,0 +1,13 @@
+# Local minikube replacement for storageclass-gp3-default.yml.
+# Uses minikube's built-in hostpath provisioner instead of AWS EBS CSI.
+# volumeBindingMode must be Immediate (hostpath does not support WaitForFirstConsumer).
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: false

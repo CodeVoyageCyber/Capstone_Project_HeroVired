@@ -15,6 +15,7 @@ spec:
       containers:
         - name: moods-service
           image: prashantdey/merndemoapp:moodsservicev1.0
+          imagePullPolicy: Never
           ports:
             - containerPort: 50052
           env:

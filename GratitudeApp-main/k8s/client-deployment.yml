@@ -15,5 +15,6 @@ spec:
       containers:
         - name: client
           image: prashantdey/merndemoapp:clientv1.6
+          imagePullPolicy: Never
           ports:
-            - containerPort: 3000
+            - containerPort: 80

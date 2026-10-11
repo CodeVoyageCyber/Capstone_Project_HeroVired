@@ -15,6 +15,7 @@ spec:
       containers:
         - name: stats-service
           image: prashantdey/merndemoapp:statsservicev1.0
+          imagePullPolicy: Never
           ports:
             - containerPort: 50053
           env:

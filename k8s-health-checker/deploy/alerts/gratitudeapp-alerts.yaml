@@ -1,0 +1,75 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gratitudeapp-health-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring          # Must match Helm release name for the operator to pick it up
+    app: kube-prometheus-stack
+spec:
+  groups:
+    # ── Node health ──────────────────────────────────────────────────────────
+    - name: node-health
+      interval: 30s
+      rules:
+        - alert: NodeNotReady
+          expr: healthchecker_node_ready == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Node {{ $labels.node }} is NOT Ready"
+            description: >
+              Node {{ $labels.node }} has been in NotReady state for more than
+              2 minutes. Investigate node conditions immediately.
+
+    # ── GratitudeApp deployment replica health ────────────────────────────────
+    - name: gratitudeapp-deployments
+      interval: 30s
+      rules:
+        - alert: GratitudeAppDeploymentDegraded
+          expr: |
+            healthchecker_deployment_all_replicas_available{
+              namespace="default",
+              deployment=~"client-deployment|api-gateway-deployment|entries-deployment|moods-api-deployment|moods-service-deployment|stats-api-deployment|stats-service-deployment|files-service-deployment|server-deployment|postgres-deployment"
+            } == 0
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.deployment }} has fewer replicas than desired"
+            description: >
+              Deployment {{ $labels.deployment }} in namespace
+              {{ $labels.namespace }} has available replicas < desired for
+              more than 1 minute.
+
+    # ── Pod health ────────────────────────────────────────────────────────────
+    - name: pod-health
+      interval: 30s
+      rules:
+        - alert: PodHighRestartCount
+          expr: |
+            healthchecker_pod_restarts_total{namespace="default"} > 5
+          for: 0m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.pod }} has restarted > 5 times"
+            description: >
+              Pod {{ $labels.pod }} in {{ $labels.namespace }} has accumulated
+              {{ $value }} container restarts. Investigate crash-looping container.
+
+        - alert: PodNotReady
+          expr: |
+            healthchecker_pod_ready{namespace="default"} == 0
+              and
+            healthchecker_pod_phase_running{namespace="default"} == 1
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.pod }} is Running but NOT Ready"
+            description: >
+              Pod {{ $labels.pod }} in {{ $labels.namespace }} has been in
+              Running phase but its Ready condition is False for more than
+              2 minutes. Check readiness probe and container logs.

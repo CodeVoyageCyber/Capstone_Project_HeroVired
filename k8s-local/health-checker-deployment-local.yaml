@@ -1,0 +1,52 @@
+# Local minikube override for deploy/healthchecker/deployment.yaml.
+# Uses the locally-built image with imagePullPolicy: Never.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-checker-deployment
+  namespace: default
+  labels:
+    component: health-checker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: health-checker
+  template:
+    metadata:
+      labels:
+        component: health-checker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: health-checker
+      containers:
+        - name: health-checker
+          image: gratitude-health-checker:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: TARGET_NAMESPACE
+              value: "default"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20

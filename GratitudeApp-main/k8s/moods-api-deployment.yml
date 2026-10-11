@@ -15,6 +15,7 @@ spec:
       containers:
         - name: moods-api
           image: prashantdey/merndemoapp:moodsapiv1.0
+          imagePullPolicy: Never
           ports:
             - containerPort: 5002
           env:
