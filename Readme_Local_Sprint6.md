@@ -162,6 +162,11 @@ Password: changeme
 >   $(kubectl get pod -n monitoring -l app.kubernetes.io/name=grafana -o jsonpath='{.items[0].metadata.name}') \
 >   -c grafana-sc-dashboard --tail=20
 > ```
+### Screenshot — `http://localhost:3000`
+<img width="3412" height="1584" alt="image" src="https://github.com/user-attachments/assets/334b13aa-7fb3-4505-9c86-9325eb2d0805" />
+<img width="2758" height="1426" alt="image" src="https://github.com/user-attachments/assets/c5cf2182-266c-4df2-9a3d-5c3f7726200d" />
+<img width="3246" height="624" alt="image" src="https://github.com/user-attachments/assets/c76fe0b5-63f2-495d-9570-775850fadde0" />
+
 
 ### 5.3 Explore Each Panel
 
@@ -274,8 +279,6 @@ curl -s http://localhost:8000/api/healing-log | jq '.healing_log[-3:]'
 kubectl delete pod crashtest --ignore-not-found=true
 ```
 
-**Screenshot opportunity:** Pod Restart Count panel rising, then dropping after heal.
-
 ### 7.3 Trigger & Observe HPA Scale-Out in Grafana
 
 ```bash
@@ -295,8 +298,6 @@ kubectl delete -f k8s-health-checker/load-generator.yaml
 # 5. Watch replicas scale back down
 kubectl get hpa -n default -w
 ```
-
-**Screenshot opportunity:** HPA panel showing replica count scaling from 1 → 3.
 
 ### 7.4 Trigger & Observe Prometheus Alert in Grafana
 
@@ -319,8 +320,6 @@ kubectl scale deployment entries-deployment --replicas=1 -n default
 
 # 6. Wait 1–2 minutes — alert resolves, panel returns to green
 ```
-
-**Screenshot opportunity:** Deployment Health panel with entries-deployment showing "DEGRADED" red, and Active Alerts panel listing the alert.
 
 ### 7.5 Verify Slack Notification Delivery
 
@@ -346,56 +345,7 @@ curl -s http://localhost:8000/api/notifications | jq '.notifications[-1]'
 
 ---
 
-## 8. Step-by-Step Screenshot Guide
-
-Take the following screenshots to document the Sprint 6 completion:
-
-### SS 6.1 — Sprint 6 Full Dashboard Overview
-- **What:** Grafana Sprint 6 dashboard — all panels visible at a glance
-- **How:** Open Grafana → Sprint 6 dashboard → set time to "Last 1h" → screenshot full page
-- **URL:** `http://localhost:3000/d/gratitude-s6-v1`
-
-### SS 6.2 — Deployment Health: All OK
-- **What:** "Deployment Health — All Replicas Available" panel showing all 10 deployments GREEN "OK"
-- **How:** Focus/zoom the panel (click panel title → View)
-
-### SS 6.3 — Healing Event: Pod Restart Count Rising → Healed
-- **What:** Pod Restart Count time-series panel showing crashtest pod restart count rising, then disappearing after healing
-- **How:** Run crashtest scenario (Step 7.2), set time range to "Last 15m", screenshot
-
-### SS 6.4 — HPA Scale-Out Event
-- **What:** HPA panel showing current replicas climbing from 1 → 3 under load
-- **How:** Run load generator (Step 7.3), screenshot HPA panel
-
-### SS 6.5 — Active Prometheus Alert
-- **What:** Active Alerts panel listing "GratitudeAppDeploymentDegraded" + Deployment Health panel showing DEGRADED in red
-- **How:** Scale entries-deployment to 0, wait 1 min, screenshot
-
-### SS 6.6 — Healing Audit Log
-- **What:** API response from `GET /api/healing-log` showing structured healing actions
-- **How:**
-  ```bash
-  curl -s http://localhost:8000/api/healing-log | jq . > /tmp/healing-log-ss.json
-  cat /tmp/healing-log-ss.json
-  ```
-
-### SS 6.7 — Notification History
-- **What:** API response from `GET /api/notifications` showing delivered/mock notifications
-- **How:**
-  ```bash
-  curl -s http://localhost:8000/api/notifications | jq .
-  ```
-
-### SS 6.8 — Full GratitudeApp Running (kubectl get pods)
-- **What:** All 10 GratitudeApp pods Running in the default namespace
-- **How:**
-  ```bash
-  kubectl get pods -n default
-  ```
-
----
-
-## 9. Step 5: Teardown
+## 8. Step 5: Teardown
 
 Once all screenshots are captured and the project is complete:
 
@@ -443,7 +393,7 @@ minikube stop
 | 4 | **Alerting & Notifications Documentation** | [`docs/alerting-and-notifications.md`](docs/alerting-and-notifications.md) | ✅ Done (Sprint 5) |
 | 5 | **Teardown Script** with `--delete-cluster` option | [`scripts/99-teardown.sh`](scripts/99-teardown.sh) | ✅ Done |
 | 6 | **End-to-End Test** — all scenarios verified locally | Step 7 above | ⬜ Run |
-| 7 | **Screenshots** — 8 proof-of-work screenshots | Step 8 above | ⬜ Capture |
+| 7 | **Screenshots** — proof-of-work screenshots | |  ⬜ Capture |
 | 8 | **`Readme_Local_Sprint6.md`** (this file) | `Readme_Local_Sprint6.md` | ✅ Done |
 
 ---
