@@ -152,9 +152,9 @@ server-hpa        Deployment/server-deployment         1%/50%    1         4    
 
 ### Screenshot — HPA Configured & Active
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of `kubectl get hpa -n default` showing all 3 HPAs reporting valid CPU utilization percentages against their 50% target._
-> _Suggested filename: `docs/screenshots/sprint4-hpa-configured.png`_
+> `kubectl get hpa -n default` showing all 3 HPAs reporting valid CPU utilization percentages against their 50% target._
+<img width="2304" height="486" alt="image" src="https://github.com/user-attachments/assets/311db9b2-8067-4bb1-bc4e-46038c004c55" />
+
 
 ---
 
@@ -188,9 +188,8 @@ deployment.apps/cluster-autoscaler created (dry run)
 
 ### Screenshot — Cluster Autoscaler Manifest Validation
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot showing `kubectl apply --dry-run=client` of `cluster-autoscaler.yaml` and the `cluster.yaml` node group configuration._
-> _Suggested filename: `docs/screenshots/sprint4-cluster-autoscaler-manifest.png`_
+> showing `kubectl apply --dry-run=client` of `cluster-autoscaler.yaml` and the `cluster.yaml` node group configuration._
+<img width="2586" height="210" alt="image" src="https://github.com/user-attachments/assets/1780dcd6-f93e-489e-952f-1db6d3c91901" />
 
 ---
 
@@ -279,9 +278,8 @@ Expected output:
 
 ### Screenshot — `/api/node-balancing` Response
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of terminal showing `curl http://localhost:8000/api/node-balancing | python3 -m json.tool` output._
-> _Suggested filename: `docs/screenshots/sprint4-resource-balancing-api.png`_
+<img width="1218" height="1774" alt="image" src="https://github.com/user-attachments/assets/54d67962-f10c-4fd0-9783-a14f030f2e39" />
+
 
 ---
 
@@ -335,9 +333,8 @@ Within 30–60 seconds, CPU utilization surpasses the 50% target threshold:
 
 ### Screenshot — HPA Scale-Out Under Load
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot showing `kubectl get hpa` and `kubectl get pods` with replicas scaled up (e.g. 3/5 replicas) under load._
-> _Suggested filename: `docs/screenshots/sprint4-hpa-scale-out.png`_
+> showing `kubectl get hpa` and `kubectl get pods` with replicas scaled up (e.g. 3/5 replicas) under load._
+<img width="2172" height="516" alt="image" src="https://github.com/user-attachments/assets/3ac256f9-91f2-465f-8b2a-6dc623540d8f" />
 
 ---
 
@@ -365,29 +362,13 @@ kubectl get pods -n default -l component=web
 
 ### Screenshot — HPA Scale-In After Load Stops
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot showing `kubectl get hpa` and `kubectl get pods` returning back to 1 replica after the load test completes._
-> _Suggested filename: `docs/screenshots/sprint4-hpa-scale-in.png`_
+> showing `kubectl get hpa` and `kubectl get pods` returning back to 1 replica after the load test completes._
+<img width="2204" height="80" alt="image" src="https://github.com/user-attachments/assets/c5ad7ac6-ca59-4839-a912-17efe0f270a6" />
+<img width="1830" height="228" alt="image" src="https://github.com/user-attachments/assets/d4c2be89-523c-4090-93cd-c2f80cb4f532" />
 
 ---
 
-## 11. Step-by-Step Screenshot Guide
-
-Summary of the screenshots to capture for Sprint 4:
-
-| # | Suggested Filename | What to Capture |
-|---|--------------------|-----------------|
-| 1 | `sprint4-hpa-configured.png` | `kubectl get hpa -n default` showing all 3 HPAs reporting live CPU utilization against 50% target |
-| 2 | `sprint4-cluster-autoscaler-manifest.png` | `kubectl apply --dry-run=client` of `cluster-autoscaler.yaml` and EKS ASG tags |
-| 3 | `sprint4-healthchecker-sprint4.png` | Pod logs and `kubectl rollout status` for `health-checker:sprint4` |
-| 4 | `sprint4-resource-balancing-api.png` | Output of `curl http://localhost:8000/api/node-balancing` showing node pod allocations |
-| 5 | `sprint4-load-test-running.png` | `kubectl get pods` showing `load-generator` pods running |
-| 6 | `sprint4-hpa-scale-out.png` | `kubectl get hpa` and `kubectl get pods` showing scale-out to multiple replicas under load |
-| 7 | `sprint4-hpa-scale-in.png` | `kubectl get hpa` and `kubectl get pods` showing scale-in back to 1 replica after load ends |
-
----
-
-## 12. Sprint 4 Deliverables Checklist
+## 11. Sprint 4 Deliverables Checklist
 
 ### Autoscaling & Scaling Policies
 - [x] Defined HorizontalPodAutoscalers for `api-gateway`, `client`, and `server` in [`hpa-gratitudeapp.yaml`](k8s-health-checker/deploy/autoscaling/hpa-gratitudeapp.yaml)
