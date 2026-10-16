@@ -117,9 +117,8 @@ kubectl logs -n monitoring alertmanager-monitoring-kube-prometheus-alertmanager-
 
 ### Screenshot — Alertmanager Configuration Applied
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot showing `kubectl apply -f k8s-health-checker/deploy/alerts/alertmanager-config.yaml` and Alertmanager logs confirming reload._
-> _Suggested filename: `docs/screenshots/sprint5-alertmanager-config.png`_
+> showing `kubectl apply -f k8s-health-checker/deploy/alerts/alertmanager-config.yaml` and Alertmanager logs confirming reload._
+<img width="3028" height="656" alt="image" src="https://github.com/user-attachments/assets/a1090ed9-5c4c-4ba8-bc4d-10a7eb6fc9ed" />
 
 ---
 
@@ -146,9 +145,8 @@ kubectl get pods -n default -l component=health-checker
 
 ### Screenshot — Health-Checker Sprint 5 Pod Running
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot showing `kubectl rollout status` and pod running with `health-checker:sprint5`._
-> _Suggested filename: `docs/screenshots/sprint5-healthchecker-running.png`_
+> showing `kubectl rollout status` and pod running with `health-checker:sprint5`._
+<img width="2232" height="386" alt="image" src="https://github.com/user-attachments/assets/56e57f79-f1cd-4b9a-93cc-cc540f1127f4" />
 
 ---
 
@@ -202,9 +200,8 @@ Expected output:
 
 ### Screenshot — Direct Slack Notification Dispatched
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of terminal showing the curl `POST /api/notify/slack` response._
-> _Suggested filename: `docs/screenshots/sprint5-test-notification.png`_
+> terminal showing the curl `POST /api/notify/slack` response._
+<img width="1844" height="1164" alt="image" src="https://github.com/user-attachments/assets/53c2df8e-7adf-4b17-ac9e-1edf50ecc797" />
 
 ---
 
@@ -264,9 +261,9 @@ kubectl delete deployment test-healing-notifier -n default
 
 ### Screenshot — Self-Healing Notification Delivery
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot showing `kubectl logs` displaying the auto-recovery event and the resulting Slack notification record._
-> _Suggested filename: `docs/screenshots/sprint5-healing-notification.png`_
+> showing `kubectl logs` displaying the auto-recovery event and the resulting Slack notification record._
+<img width="1896" height="552" alt="image" src="https://github.com/user-attachments/assets/ba056dd3-9f85-4c57-88a5-1cb68b3344c3" />
+<img width="1804" height="1764" alt="image" src="https://github.com/user-attachments/assets/17c908fb-2eb9-4e4d-907a-0c307f8c8fe1" />
 
 ---
 
@@ -299,9 +296,8 @@ kubectl rollout status deployment/client-deployment -n default
 
 ### Screenshot — Alertmanager UI Firing Alert
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of Alertmanager (`http://localhost:9093`) showing `GratitudeAppDeploymentDegraded` active and routed to `slack-warning`._
-> _Suggested filename: `docs/screenshots/sprint5-alertmanager-firing.png`_
+> Alertmanager (`http://localhost:9093`) showing `GratitudeAppDeploymentDegraded` active and routed to `slack-warning`._
+<img width="2600" height="1252" alt="image" src="https://github.com/user-attachments/assets/0a901c2b-cee0-486f-8af7-2a4a3c88a41b" />
 
 ---
 
@@ -315,28 +311,12 @@ curl -s http://localhost:8000/api/notifications | python3 -m json.tool
 
 ### Screenshot — `/api/notifications` JSON Output
 
-> 📸 **[SCREENSHOT PLACEHOLDER]**
-> _Add screenshot of terminal showing the formatted list of all dispatched notifications._
-> _Suggested filename: `docs/screenshots/sprint5-notification-history.png`_
+> showing the formatted list of all dispatched notifications._
+<img width="1956" height="1840" alt="image" src="https://github.com/user-attachments/assets/dfc6ed79-e65c-4832-8cdd-ffc238c24afb" />
 
 ---
 
-## 8. Step-by-Step Screenshot Guide
-
-Summary of screenshots to capture for Sprint 5:
-
-| # | Suggested Filename | What to Capture |
-|---|--------------------|-----------------|
-| 1 | `sprint5-alertmanager-config.png` | `kubectl apply` of Alertmanager Slack routing Secret |
-| 2 | `sprint5-healthchecker-running.png` | `kubectl rollout status` and pod running for `health-checker:sprint5` |
-| 3 | `sprint5-test-notification.png` | Terminal showing `POST /api/notify/slack` response |
-| 4 | `sprint5-healing-notification.png` | Health-checker logs showing auto-recovery Slack alert dispatched |
-| 5 | `sprint5-alertmanager-firing.png` | Alertmanager UI (`http://localhost:9093`) routing alert to `slack-warning` |
-| 6 | `sprint5-notification-history.png` | Full JSON history from `GET /api/notifications` |
-
----
-
-## 9. Sprint 5 Deliverables Checklist
+## 8. Sprint 5 Deliverables Checklist
 
 ### Slack Integration & Health-Checker Notifier
 - [x] Implemented [`slack_notifier.py`](k8s-health-checker/healthchecker-app/slack_notifier.py) with Block Kit formatting, multi-severity colors, and mock/live delivery
