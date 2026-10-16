@@ -513,23 +513,7 @@ healthchecker_healing_actions_total{action="cleanup_evicted_pod",namespace="defa
 <img width="2826" height="320" alt="image" src="https://github.com/user-attachments/assets/cda42f3f-151e-415f-9a51-d11e4c8531f5" />
 ---
 
-## 11. Step-by-Step Screenshot Guide
-
-Summary of the screenshots to capture for Sprint 3:
-
-| # | Suggested Filename | What to Capture |
-|---|--------------------|-----------------|
-| 1 | `sprint3-fis-rbac.png` | Terminal showing application of FIS RBAC manifests (`rbac.yml`, `fis-sa-cluster-admin.yml`) |
-| 2 | `sprint3-healthchecker-running.png` | Terminal showing `kubectl rollout status` and pod logs for `health-checker:sprint3` |
-| 3 | `sprint3-crashloop-healing.png` | Pod in `CrashLoopBackOff` being detected and deleted by the health-checker |
-| 4 | `sprint3-evicted-cleanup.png` | Evicted simulation pod automatically cleaned up by `scan_and_heal` |
-| 5 | `sprint3-chaos-stress.png` | Execution of CPU stress simulation matching `fis-template.json` |
-| 6 | `sprint3-healing-log-api.png` | Browser or curl output of `GET /api/healing-log` showing structured audit events |
-| 7 | `sprint3-metrics-healing.png` | Terminal output of `/metrics` showing `healthchecker_healing_actions_total` counters |
-
----
-
-## 12. Sprint 3 Deliverables Checklist
+## 11. Sprint 3 Deliverables Checklist
 
 ### Code Implementation
 - [x] [`healer.py`](k8s-health-checker/healthchecker-app/healer.py) — Self-healing engine with `diagnose_pod()`, `scan_and_heal()`, and audit log buffer
