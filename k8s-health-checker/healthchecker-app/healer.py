@@ -74,6 +74,21 @@ def record_audit(
     except Exception as exc:
         logger.warning("Failed to increment HEALING_ACTIONS metric: %s", exc)
 
+    # Dispatch real-time Slack notification
+    try:
+        from slack_notifier import send_healing_notification
+
+        send_healing_notification(
+            action=action,
+            pod=pod,
+            namespace=namespace,
+            reason=reason,
+            result=result,
+            details=details,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to send Slack healing notification: %s", exc)
+
     logger.info("Self-healing action: %s", entry)
     return entry
 

@@ -16,7 +16,7 @@ in Sprint 3.
 
 import os
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
@@ -24,14 +24,16 @@ from k8s_client import get_clients, list_deployments, list_nodes, list_pods
 from monitor import collect_once, start_background_poller
 from healer import get_healing_audit_log, scan_and_heal
 from balancer import get_node_balance_report
+from slack_notifier import get_notification_history, send_slack_message
 
 TARGET_NAMESPACE = os.environ.get("TARGET_NAMESPACE", "default")
 
 app = FastAPI(
     title="GratitudeApp Health Checker",
-    description="Automated health monitoring, self-healing, and resource balancing for GratitudeApp",
-    version="0.3.0",
+    description="Automated health monitoring, self-healing, resource balancing, and alerting for GratitudeApp",
+    version="0.5.0",
 )
+
 
 
 
@@ -122,8 +124,43 @@ def get_node_balancing(namespace: str = TARGET_NAMESPACE):
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.post("/api/notify/slack")
+async def post_slack_notification(request: Request):
+    """
+    Send an on-demand Slack notification (Block Kit formatted).
+    Accepts JSON payload:
+      {"title": str, "message": str, "severity": "info"|"warning"|"critical"|"healing", "fields": dict}
+    """
+    try:
+        body = await request.json() if request.headers.get("content-type") == "application/json" else {}
+    except Exception:
+        body = {}
+
+    title = body.get("title", "Test Alert from GratitudeApp")
+    message = body.get("message", "Manual test alert initiated via health-checker API.")
+    severity = body.get("severity", "info")
+    fields = body.get("fields", {"Source": "Health-Checker API", "Environment": "Kubernetes"})
+
+    result = send_slack_message(
+        title=title,
+        message=message,
+        severity=severity,
+        fields=fields,
+    )
+    return {"status": "ok", "notification": result}
+
+
+@app.get("/api/notifications")
+def get_notifications(limit: int = 50):
+    """Retrieve history of recently dispatched alert notifications."""
+    try:
+        return {"notifications": get_notification_history(limit)}
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
 
 if __name__ == "__main__":
+
     import uvicorn
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

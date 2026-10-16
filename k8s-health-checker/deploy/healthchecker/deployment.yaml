@@ -22,7 +22,7 @@ spec:
       serviceAccountName: health-checker
       containers:
         - name: health-checker
-          image: health-checker:sprint4
+          image: health-checker:sprint5
           imagePullPolicy: Never
           ports:
             - containerPort: 8000
@@ -33,6 +33,10 @@ spec:
               value: "true"
             - name: HEALING_COOLDOWN_SECONDS
               value: "45"
+            - name: SLACK_WEBHOOK_URL
+              value: ""
+            - name: SLACK_CHANNEL
+              value: "#devops-alerts"
           resources:
             requests:
               cpu: 50m

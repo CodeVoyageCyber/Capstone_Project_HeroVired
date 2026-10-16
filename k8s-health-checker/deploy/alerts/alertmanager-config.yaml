@@ -1,0 +1,111 @@
+# Alertmanager Slack Configuration — Sprint 5
+#
+# Configures multi-tier alert routing by severity (critical, warning, info)
+# to dedicated Slack channels using Slack Incoming Webhook integration.
+#
+# Channels:
+#   - critical: #devops-critical (immediate alerts, repeat every 10m)
+#   - warning:  #devops-alerts   (repeat every 1h)
+#   - info:     #devops-info     (repeat every 2h)
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-monitoring-kube-prometheus-alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+stringData:
+  alertmanager.yaml: |
+    global:
+      resolve_timeout: 5m
+      slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK_URL' # Replace with real or mock webhook
+
+    route:
+      group_by: ['alertname', 'namespace', 'deployment', 'node']
+      group_wait: 30s
+      group_interval: 3m
+      repeat_interval: 4h
+      receiver: 'slack-default'
+      routes:
+        # Route 1: Critical infrastructure & node failure alerts
+        - match:
+            severity: critical
+          receiver: 'slack-critical'
+          repeat_interval: 10m
+          continue: false
+
+        # Route 2: Warning alerts (degraded deployments, high restarts)
+        - match:
+            severity: warning
+          receiver: 'slack-warning'
+          repeat_interval: 1h
+          continue: false
+
+        # Route 3: Info / Health metrics notifications
+        - match:
+            severity: info
+          receiver: 'slack-info'
+          repeat_interval: 2h
+          continue: false
+
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'namespace']
+
+    receivers:
+      - name: 'slack-critical'
+        slack_configs:
+          - channel: '#devops-critical'
+            send_resolved: true
+            color: 'danger'
+            icon_emoji: ':rotating_light:'
+            title: '🚨 [CRITICAL ALERT] {{ .CommonLabels.alertname }}'
+            text: >-
+              *Summary:* {{ .CommonAnnotations.summary }}
+              *Description:* {{ .CommonAnnotations.description }}
+              *Namespace:* `{{ .CommonLabels.namespace }}`
+              *Target:* `{{ or .CommonLabels.node .CommonLabels.deployment .CommonLabels.pod "cluster" }}`
+            actions:
+              - type: button
+                text: 'View in Prometheus :mag:'
+                url: 'http://localhost:9090/alerts'
+
+      - name: 'slack-warning'
+        slack_configs:
+          - channel: '#devops-alerts'
+            send_resolved: true
+            color: 'warning'
+            icon_emoji: ':warning:'
+            title: '⚠️ [WARNING] {{ .CommonLabels.alertname }}'
+            text: >-
+              *Summary:* {{ .CommonAnnotations.summary }}
+              *Description:* {{ .CommonAnnotations.description }}
+              *Namespace:* `{{ .CommonLabels.namespace }}`
+              *Target:* `{{ or .CommonLabels.deployment .CommonLabels.pod "cluster" }}`
+            actions:
+              - type: button
+                text: 'View in Grafana :bar_chart:'
+                url: 'http://localhost:3000'
+
+      - name: 'slack-info'
+        slack_configs:
+          - channel: '#devops-info'
+            send_resolved: true
+            color: 'good'
+            icon_emoji: ':information_source:'
+            title: 'ℹ️ [INFO] {{ .CommonLabels.alertname }}'
+            text: >-
+              *Summary:* {{ .CommonAnnotations.summary }}
+              *Namespace:* `{{ .CommonLabels.namespace }}`
+
+      - name: 'slack-default'
+        slack_configs:
+          - channel: '#devops-alerts'
+            send_resolved: true
+            color: '#439FE0'
+            title: '📢 [ALERT] {{ .CommonLabels.alertname }}'
+            text: '{{ .CommonAnnotations.description }}'
