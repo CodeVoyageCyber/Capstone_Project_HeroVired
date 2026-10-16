@@ -1,0 +1,117 @@
+# Horizontal Pod Autoscalers (HPA) for GratitudeApp services — Sprint 4
+#
+# Automatically scales replicas up and down based on observed CPU utilization
+# reported by the metrics-server.
+#
+# Target: average CPU utilization of 50% across running pods.
+# - api-gateway: scales from 1 to 5 replicas
+# - client:      scales from 1 to 5 replicas
+# - server:      scales from 1 to 4 replicas
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+  namespace: default
+  labels:
+    app.kubernetes.io/part-of: gratitudeapp
+    component: hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-gateway-deployment
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 30
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: client-hpa
+  namespace: default
+  labels:
+    app.kubernetes.io/part-of: gratitudeapp
+    component: hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: client-deployment
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 30
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: server-hpa
+  namespace: default
+  labels:
+    app.kubernetes.io/part-of: gratitudeapp
+    component: hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: server-deployment
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 30

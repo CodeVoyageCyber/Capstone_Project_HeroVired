@@ -22,7 +22,7 @@ spec:
       serviceAccountName: health-checker
       containers:
         - name: health-checker
-          image: health-checker:sprint3
+          image: health-checker:sprint4
           imagePullPolicy: Never
           ports:
             - containerPort: 8000

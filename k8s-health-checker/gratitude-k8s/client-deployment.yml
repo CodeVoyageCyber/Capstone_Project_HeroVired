@@ -12,8 +12,22 @@ spec:
       labels:
         component: web
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              component: web
       containers:
         - name: client
           image: prashantdey/merndemoapp:clientv1.6
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 150m
+              memory: 128Mi
           ports:
             - containerPort: 3000

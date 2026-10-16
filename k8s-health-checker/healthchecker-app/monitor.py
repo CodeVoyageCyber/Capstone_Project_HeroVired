@@ -127,10 +127,11 @@ def collect_once(namespace: str = DEFAULT_NAMESPACE):
 
 
 def start_background_poller(namespace: str = DEFAULT_NAMESPACE):
-    """Run collect_once() and self-healing scan on a loop in a background
-    thread so metrics stay fresh and failed pods are recovered."""
+    """Run collect_once(), self-healing scan, and resource balancing report
+    on a loop in a background thread so metrics stay fresh."""
     import os
     from healer import scan_and_heal
+    from balancer import get_node_balance_report
 
     enable_healing = os.environ.get("ENABLE_SELF_HEALING", "true").lower() in (
         "true",
@@ -142,11 +143,12 @@ def start_background_poller(namespace: str = DEFAULT_NAMESPACE):
         while True:
             try:
                 collect_once(namespace)
+                core, _ = get_clients()
+                get_node_balance_report(core, namespace)
                 if enable_healing:
-                    core, _ = get_clients()
                     scan_and_heal(core, namespace)
             except Exception:  # noqa: BLE001
-                logger.exception("monitor / healer poll failed")
+                logger.exception("monitor / healer / balancer poll failed")
             time.sleep(POLL_INTERVAL_SECONDS)
 
     thread = threading.Thread(target=loop, daemon=True)

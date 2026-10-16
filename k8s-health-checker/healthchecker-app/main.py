@@ -23,14 +23,16 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from k8s_client import get_clients, list_deployments, list_nodes, list_pods
 from monitor import collect_once, start_background_poller
 from healer import get_healing_audit_log, scan_and_heal
+from balancer import get_node_balance_report
 
 TARGET_NAMESPACE = os.environ.get("TARGET_NAMESPACE", "default")
 
 app = FastAPI(
     title="GratitudeApp Health Checker",
-    description="Automated health monitoring and self-healing for the GratitudeApp Kubernetes deployment",
-    version="0.2.0",
+    description="Automated health monitoring, self-healing, and resource balancing for GratitudeApp",
+    version="0.3.0",
 )
+
 
 
 @app.on_event("startup")
@@ -108,6 +110,17 @@ def trigger_heal(namespace: str = TARGET_NAMESPACE):
         return {"status": "ok", "actions_taken": actions}
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/node-balancing")
+def get_node_balancing(namespace: str = TARGET_NAMESPACE):
+    """Inspect and report pod distribution and resource balancing across nodes."""
+    try:
+        core, _ = get_clients()
+        return get_node_balance_report(core, namespace)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
 
 
 if __name__ == "__main__":

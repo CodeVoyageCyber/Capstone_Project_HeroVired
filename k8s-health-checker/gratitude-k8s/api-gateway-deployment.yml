@@ -12,9 +12,23 @@ spec:
       labels:
         component: api-gateway
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              component: api-gateway
       containers:
         - name: api-gateway
           image: prashantdey/merndemoapp:apigatewayv1.0
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
           ports:
             - containerPort: 5000
           env:
