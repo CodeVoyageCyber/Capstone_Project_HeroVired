@@ -1,0 +1,366 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sprint6-full-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"          # Grafana sidecar (grafana-sc-dashboard) auto-loads this
+data:
+  sprint6-full-dashboard.json: |
+    {
+      "title": "GratitudeApp — Full Observability Dashboard (Sprint 6)",
+      "uid": "gratitude-s6-v1",
+      "schemaVersion": 38,
+      "refresh": "30s",
+      "tags": ["gratitudeapp", "health", "healing", "autoscaling", "sprint6"],
+      "time": {"from": "now-1h", "to": "now"},
+      "timepicker": {},
+      "panels": [
+
+        {
+          "id": 1,
+          "title": "🟢 Node Ready Status",
+          "type": "stat",
+          "description": "1 = Ready, 0 = NotReady. Red if any node is down.",
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "healthchecker_node_ready",
+              "legendFormat": "{{node}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {"text": "NOT READY", "color": "red"},
+                    "1": {"text": "Ready",     "color": "green"}
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red",   "value": 0},
+                  {"color": "green", "value": 1}
+                ]
+              },
+              "color": {"mode": "thresholds"}
+            }
+          }
+        },
+
+        {
+          "id": 2,
+          "title": "⚖️ Cluster Balance Ratio",
+          "type": "gauge",
+          "description": "1.0 = perfect balance across nodes. Below 0.6 = imbalanced.",
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+          "targets": [
+            {
+              "expr": "healthchecker_cluster_balance_ratio",
+              "legendFormat": "Balance Ratio",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "min": 0,
+              "max": 1,
+              "unit": "percentunit",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red",    "value": 0},
+                  {"color": "yellow", "value": 0.6},
+                  {"color": "green",  "value": 0.9}
+                ]
+              },
+              "color": {"mode": "thresholds"}
+            }
+          }
+        },
+
+        {
+          "id": 3,
+          "title": "📦 Pods per Node",
+          "type": "bargauge",
+          "description": "Number of pods scheduled on each cluster node.",
+          "gridPos": {"h": 4, "w": 12, "x": 12, "y": 0},
+          "targets": [
+            {
+              "expr": "healthchecker_node_pod_count",
+              "legendFormat": "{{node}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "blue",   "value": 0},
+                  {"color": "green",  "value": 5},
+                  {"color": "yellow", "value": 15},
+                  {"color": "red",    "value": 25}
+                ]
+              },
+              "color": {"mode": "thresholds"}
+            }
+          },
+          "options": {"orientation": "horizontal", "displayMode": "gradient"}
+        },
+
+        {
+          "id": 4,
+          "title": "✅ Deployment Health — All Replicas Available",
+          "type": "stat",
+          "description": "1 = all desired replicas running, 0 = DEGRADED.",
+          "gridPos": {"h": 5, "w": 24, "x": 0, "y": 4},
+          "targets": [
+            {
+              "expr": "healthchecker_deployment_all_replicas_available{namespace=\"default\"}",
+              "legendFormat": "{{deployment}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {"text": "DEGRADED", "color": "red"},
+                    "1": {"text": "OK",       "color": "green"}
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red",   "value": 0},
+                  {"color": "green", "value": 1}
+                ]
+              },
+              "color": {"mode": "thresholds"}
+            }
+          }
+        },
+
+        {
+          "id": 5,
+          "title": "🔄 Available vs Desired Replicas (Historical)",
+          "type": "timeseries",
+          "description": "Track replica count over time to identify scaling events and degraded windows.",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 9},
+          "targets": [
+            {
+              "expr": "healthchecker_deployment_available_replicas{namespace=\"default\"}",
+              "legendFormat": "available — {{deployment}}"
+            },
+            {
+              "expr": "healthchecker_deployment_desired_replicas{namespace=\"default\"}",
+              "legendFormat": "desired — {{deployment}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "spanNulls": true
+              }
+            }
+          }
+        },
+
+        {
+          "id": 6,
+          "title": "🔁 Pod Restart Count (Historical)",
+          "type": "timeseries",
+          "description": "Rising restart count indicates crash-loops. Self-healer should reset pods after threshold.",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 9},
+          "targets": [
+            {
+              "expr": "healthchecker_pod_restarts_total{namespace=\"default\"}",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 5
+              }
+            }
+          }
+        },
+
+        {
+          "id": 7,
+          "title": "🛠️ Pod Readiness — Current State",
+          "type": "table",
+          "description": "Per-pod readiness status across GratitudeApp namespace. Green = Ready, Red = not ready.",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 17},
+          "targets": [
+            {
+              "expr": "healthchecker_pod_ready{namespace=\"default\"}",
+              "legendFormat": "{{pod}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {"text": "NOT READY", "color": "red"},
+                    "1": {"text": "Ready",     "color": "green"}
+                  }
+                }
+              ]
+            }
+          },
+          "transformations": [{"id": "organize", "options": {}}]
+        },
+
+        {
+          "id": 8,
+          "title": "📊 Pod Phase Distribution",
+          "type": "piechart",
+          "description": "Shows running vs non-running pods in the default namespace.",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 17},
+          "targets": [
+            {
+              "expr": "sum by (pod) (healthchecker_pod_phase_running{namespace=\"default\"})",
+              "legendFormat": "Running — {{pod}}",
+              "instant": true
+            }
+          ],
+          "options": {
+            "pieType": "donut",
+            "displayLabels": ["name", "value"]
+          }
+        },
+
+        {
+          "id": 9,
+          "title": "⚡ HPA — Current vs Min/Max Replicas",
+          "type": "timeseries",
+          "description": "Horizontal Pod Autoscaler: tracks current replica count versus configured min/max bounds.",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 25},
+          "targets": [
+            {
+              "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"default\"}",
+              "legendFormat": "current — {{horizontalpodautoscaler}}"
+            },
+            {
+              "expr": "kube_horizontalpodautoscaler_spec_min_replicas{namespace=\"default\"}",
+              "legendFormat": "min — {{horizontalpodautoscaler}}"
+            },
+            {
+              "expr": "kube_horizontalpodautoscaler_spec_max_replicas{namespace=\"default\"}",
+              "legendFormat": "max — {{horizontalpodautoscaler}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {"lineWidth": 2, "fillOpacity": 8}
+            }
+          }
+        },
+
+        {
+          "id": 10,
+          "title": "🧠 CPU Allocatable per Node",
+          "type": "bargauge",
+          "description": "Allocatable CPU cores per cluster node.",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 25},
+          "targets": [
+            {
+              "expr": "healthchecker_node_cpu_capacity_cores",
+              "legendFormat": "{{node}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": 0},
+                  {"color": "blue",  "value": 2}
+                ]
+              },
+              "color": {"mode": "thresholds"}
+            }
+          },
+          "options": {"orientation": "horizontal", "displayMode": "lcd"}
+        },
+
+        {
+          "id": 11,
+          "title": "🚨 Active Alerts from Prometheus",
+          "type": "alertlist",
+          "description": "Live view of all firing Prometheus/Alertmanager alerts for GratitudeApp cluster.",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 33},
+          "options": {
+            "showOptions": "current",
+            "maxItems": 20,
+            "sortOrder": 1,
+            "dashboardAlerts": false,
+            "alertName": "",
+            "dashboardTitle": "",
+            "tags": [],
+            "stateFilter": {
+              "firing": true,
+              "pending": true,
+              "noData": false,
+              "normal": false,
+              "error": false
+            }
+          }
+        },
+
+        {
+          "id": 12,
+          "title": "📈 Cluster Balance Ratio — Historical Trend",
+          "type": "timeseries",
+          "description": "Track workload balance over time. Dips below 0.6 indicate imbalanced nodes needing pod redistribution.",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 33},
+          "targets": [
+            {
+              "expr": "healthchecker_cluster_balance_ratio",
+              "legendFormat": "Balance Ratio"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "custom": {"lineWidth": 2, "fillOpacity": 15},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red",    "value": 0},
+                  {"color": "yellow", "value": 0.6},
+                  {"color": "green",  "value": 0.9}
+                ]
+              },
+              "color": {"mode": "thresholds"}
+            }
+          }
+        }
+
+      ]
+    }
