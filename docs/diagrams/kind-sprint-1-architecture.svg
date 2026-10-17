@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1120" viewBox="0 0 1920 1120" role="img" aria-labelledby="title desc">
+<title id="title">Sprint 1 — KinD foundation and read-only monitoring</title>
+<desc id="desc">Local Docker builds load images into a three-node KinD cluster. GratitudeApp, the read-only health checker and the monitoring stack occupy separate namespaces. Prometheus scrapes metrics and Grafana queries Prometheus. Access uses localhost port-forwards.</desc>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 Z" fill="#52627a"/></marker></defs>
+<style>text{font-family:Helvetica,Arial,sans-serif;fill:#182b46}.title{font-size:34px;font-weight:700}.section{font-size:23px;font-weight:700}.node{font-size:23px;font-weight:700}.body{font-size:20px;fill:#41536d}.small{font-size:18px;fill:#52627a}</style>
+<rect width="1920" height="1120" fill="#f7f9fc"/>
+
+<text x="45" y="54" class="title">Sprint 1 · KinD foundation and read-only monitoring</text>
+<text x="45" y="89" class="body">Implementation target for the local walkthrough · attach your own validation screenshots to the guide</text>
+<rect x="90" y="120" width="760" height="115" rx="12" fill="#fff" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="110" y="154" class="node">Developer workstation</text>
+<text x="110" y="187" class="body">Docker build + kind load docker-image · kubectl + Helm</text>
+<text x="110" y="214" class="body">localhost port-forward: API :8000 · Prometheus :9090 · Grafana :3000</text>
+<rect x="1020" y="120" width="810" height="115" rx="12" fill="#fff" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="1040" y="154" class="node">Sprint 1 scope</text>
+<text x="1040" y="187" class="body">Cluster access · application baseline · read-only API · metrics discovery</text>
+<text x="1040" y="214" class="body">Diagram shows the intended result; execution and evidence are pending.</text>
+<rect x="40" y="270" width="1840" height="775" rx="12" fill="#eef3f9" stroke="#879fbf" stroke-width="1.6"/>
+<text x="65" y="307" class="section">Docker Desktop Linux VM · shared laptop compute and disk</text>
+<rect x="70" y="330" width="1780" height="660" rx="12" fill="#fff" stroke="#4b8ccf" stroke-width="1.6" stroke-dasharray="8 6"/>
+<text x="95" y="366" class="section">KinD cluster: gratitude · 1 control-plane + 2 worker containers</text>
+<rect x="650" y="395" width="560" height="85" rx="12" fill="#eaf1ff" stroke="#99b5dd" stroke-width="1.6"/>
+<text x="670" y="430" class="node">Kubernetes API + built-in controllers</text>
+<text x="670" y="459" class="small">ServiceAccount authentication · read-only observer RBAC</text>
+<rect x="100" y="510" width="490" height="425" rx="12" fill="#f3f7fc" stroke="#c3d1e2" stroke-width="1.6"/>
+<rect x="650" y="510" width="560" height="425" rx="12" fill="#f5f7fb" stroke="#c3d1e2" stroke-width="1.6"/>
+<rect x="1270" y="395" width="550" height="540" rx="12" fill="#f2f8fa" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="120" y="549" class="section">namespace: gratitude</text>
+<text x="670" y="549" class="section">namespace: health-system</text>
+<text x="1290" y="434" class="section">namespace: monitoring</text>
+<rect x="120" y="580" width="450" height="140" rx="12" fill="#fff" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="140" y="614" class="node">GratitudeApp</text>
+<text x="140" y="647" class="body">9 services · local Docker images</text>
+<text x="140" y="674" class="body">React/nginx + REST/gRPC backends</text>
+<text x="140" y="701" class="body">Journal validation via API gateway</text>
+<rect x="120" y="775" width="450" height="120" rx="12" fill="#fff" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="140" y="809" class="node">PostgreSQL</text>
+<text x="140" y="842" class="body">Local standard PVC</text>
+<text x="140" y="869" class="body">Application data + initialization SQL</text>
+<rect x="670" y="580" width="520" height="160" rx="12" fill="#fff" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="690" y="614" class="node">FastAPI health checker</text>
+<text x="690" y="647" class="body">Read nodes, pods, services, deployments</text>
+<text x="690" y="674" class="body">Cached snapshot · polling every 15 seconds</text>
+<text x="690" y="701" class="body">/healthz · /readyz · /api/* · /metrics</text>
+<rect x="670" y="805" width="520" height="90" rx="12" fill="#fff" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="690" y="839" class="node">Service: healthchecker</text>
+<text x="690" y="872" class="body">Named http port :8000 · ServiceMonitor target</text>
+<rect x="1290" y="470" width="510" height="120" rx="12" fill="#fff" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="1310" y="504" class="node">Prometheus</text>
+<text x="1310" y="537" class="body">ServiceMonitor discovery · /metrics scrapes</text>
+<text x="1310" y="564" class="body">Local TSDB PVC · cluster metrics</text>
+<rect x="1290" y="645" width="510" height="105" rx="12" fill="#fff" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="1310" y="679" class="node">Cluster metrics sources</text>
+<text x="1310" y="712" class="body">kube-state-metrics + kubelet/cAdvisor</text>
+<rect x="1290" y="805" width="510" height="90" rx="12" fill="#fff" stroke="#c3d1e2" stroke-width="1.6"/>
+<text x="1310" y="839" class="node">Grafana</text>
+<text x="1310" y="872" class="body">Prometheus data source · Explore · local PVC</text>
+<path d="M470 235 L470 253 L50 253 L50 650 L120 650" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="105" y="390" class="small">Build images; load and apply resources</text>
+<path d="M1190 615 L1235 615 L1235 437 L1210 437" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="675" y="570" class="small">Read-only Kubernetes API calls</text>
+<path d="M1290 530 L1255 530 L1255 850 L1190 850" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="675" y="780" class="small">Prometheus pulls metrics through Service discovery</text>
+<path d="M1545 645 L1545 590" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1565" y="626" class="small">scrape</text>
+<path d="M1800 850 L1810 850 L1810 530 L1800 530" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M345 720 L345 775" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="365" y="756" class="small">SQL</text>
+<text x="105" y="973" class="body">Monitoring chart also installs Prometheus Operator and Alertmanager; no custom alert routing is configured in Sprint 1.</text>
+<text x="65" y="1024" class="body">Local PVCs survive pod recreation; deleting the KinD cluster removes its local data.</text>
+<text x="45" y="1085" class="small">Access: localhost port-forwards. Frontend assets and backend API are tested separately; shared browser /api routing is outside this baseline.</text>
+</svg>

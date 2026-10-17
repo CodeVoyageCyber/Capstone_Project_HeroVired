@@ -2,22 +2,54 @@
 
 This is a hands-on implementation guide, not an installed implementation. Run the commands yourself, in order, from the repository root. Each `cat > ...` block creates the file named in that block. Existing EKS files remain untouched.
 
-The Sprint 1 requirements in `Project_details.txt` are:
+## Sprint 1 task checklist
 
-1. Define the project structure.
-2. Set up Kubernetes cluster access.
-3. Build basic API access for nodes, pods, and services.
-4. Install Prometheus to monitor Kubernetes.
+The four required Sprint 1 tasks from `Project_details.txt` are **project structure**, **Kubernetes cluster access**, **basic API access to nodes/pods/services**, and **Prometheus installation**. The checklist below breaks them into executable steps, including the application's local deployment and validation.
 
-This guide also covers containerizing the health checker, deploying it with read-only RBAC, integrating its metrics with Prometheus, opening Grafana, and deploying the repository's GratitudeApp as the monitored workload. Healing, custom health rules, scaling, Slack, and the final dashboard belong to later sprints.
+Check a task only after running it locally and confirming its expected result. All tasks and screenshots start **pending**.
 
-**End state:** a three-node Kubernetes cluster inside Docker, GratitudeApp in `gratitude`, the health checker in `health-system`, and Prometheus/Grafana/Alertmanager in `monitoring`. No AWS account, EKS, ECR, NLB, or cloud storage is required for the core lab.
+- [ ] **Task 1 — Prepare tools and branch:** verify Docker, KinD, kubectl, Helm, Python, and the `KinD` branch (§2).
+- [ ] **Task 2 — Define project structure:** create the `kind-lab/` directories and ignore rules (§3).
+- [ ] **Task 3 — Set up cluster access:** create one control-plane and two workers, select the context, verify Ready nodes, and record versions (§4).
+- [ ] **Task 4 — Separate workloads:** create the three namespaces (§5).
+- [ ] **Task 5 — Implement basic Kubernetes API access:** write the read-only health checker and its metrics; optionally smoke-test locally (§6).
+- [ ] **Task 6 — Containerize the observer:** build and load the health-checker image into KinD (§7).
+- [ ] **Task 7 — Configure permissions:** apply ServiceAccount/RBAC and verify allowed reads and denied writes/secret access (§8).
+- [ ] **Task 8 — Deploy and verify the observer:** deploy the health checker, forward its Service, and test readiness, nodes, pods, services, and metrics (§9).
+- [ ] **Task 9 — Deploy the monitored application:** build/load GratitudeApp images, generate local manifests, create local secrets, deploy PostgreSQL/application pods, and verify journal create/list (§10).
+- [ ] **Task 10 — Install Kubernetes monitoring:** record a compatible chart version and install Prometheus, Grafana, Alertmanager, and exporters (§11).
+- [ ] **Task 11 — Connect custom metrics:** create the ServiceMonitor and verify service discovery (§12).
+- [ ] **Task 12 — Validate monitoring access:** confirm Prometheus targets, custom/cluster queries, and Grafana Explore (§13).
+- [ ] **Task 13 — Test dynamic discovery:** create/remove a temporary workload and verify the snapshot follows it (§14).
+- [ ] **Task 14 — Document completion:** attach screenshots, save command evidence, and complete the acceptance checklist (§15 and §18).
+
+**End state:** a three-node Kubernetes cluster inside Docker, GratitudeApp in `gratitude`, the health checker in `health-system`, and the monitoring stack in `monitoring`. This sprint establishes observation only; automated healing, autoscaling, Slack delivery, and custom final dashboards are outside its scope.
+
+## How to attach your screenshots
+
+Screenshot slots appear after the relevant validation steps. They deliberately contain **pending text and a commented image reference**, so the document does not display broken images before you run the lab.
+
+1. Save each screenshot in `docs/kind/screenshots/sprint-1/` using the filename shown in its slot.
+2. Replace the pending blockquote with your actual result and execution date.
+3. Uncomment the image reference by removing its surrounding `<!--` and `-->` lines. For example:
+
+```markdown
+![S1-01 — Installed tools and Docker engine](screenshots/sprint-1/01-tools.png)
+```
+
+4. Add any useful observation under the image and mark the corresponding task complete only after its checks pass.
+
+Use PNG files, or update the reference if you use another extension. You can attach multiple images per slot by adding extra Markdown image lines. Keep passwords, webhook URLs, tokens, and API keys out of screenshots. This screenshot folder can be committed; `kind-lab/evidence/` is for ignored local command output.
+
+**Execution record:** Date: _pending_ · Machine/OS: _pending_ · Kubernetes version: _pending_ · Overall result: _not run_.
 
 ## 1. Understand the local architecture
 
-See the [sprint-mapped KinD architecture](ARCHITECTURE.md) for the full six-sprint target design.
+This diagram includes only the components introduced or installed in Sprint 1. It is the intended local result, not a screenshot or a claim of deployment.
 
-![KinD architecture by sprint](../diagrams/kind-architecture.png)
+![Sprint 1 KinD foundation and read-only monitoring architecture](../diagrams/kind-sprint-1-architecture.png)
+
+[Editable Sprint 1 diagram (SVG)](../diagrams/kind-sprint-1-architecture.svg)
 
 ```text
 Your Mac
@@ -38,7 +70,7 @@ Prometheus -> ServiceMonitor -> health checker /metrics
 Prometheus -> kube-state-metrics / kubelet -> cluster metrics
 ```
 
-KinD workers share your laptop's resources. Three Kubernetes nodes do not provide three physical machines' worth of CPU or memory. Later node-scaling exercises must explicitly distinguish simulated capacity changes from creating real worker machines.
+KinD workers share your laptop's resources. Three Kubernetes nodes do not provide three physical machines' worth of CPU or memory.
 
 Use the existing application source, but create the infrastructure and health checker in a new `kind-lab/` directory. Do not run `k8s-health-checker/scripts/01-provision-eks.sh`, its ECR build script, or its EKS teardown script for this lab.
 
@@ -85,6 +117,19 @@ git switch KinD
 
 Do not copy the example `cd` path literally; use your own checkout location.
 
+
+### Screenshot S1-01 — Tools and branch
+
+> **Screenshot pending:** Show the running Docker engine, tool versions, and current KinD branch.
+>
+> Save as `docs/kind/screenshots/sprint-1/01-tools.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-01 — Tools and branch](screenshots/sprint-1/01-tools.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
+
 ## 3. Create the lab structure
 
 ```bash
@@ -123,6 +168,19 @@ kind-lab/
 ```
 
 The new application is independent of `k8s-health-checker/healthchecker-app/`. That older implementation is a reference; do not combine the two deployment paths.
+
+
+### Screenshot S1-02 — Project structure
+
+> **Screenshot pending:** Show the created kind-lab directories and ignore rules.
+>
+> Save as `docs/kind/screenshots/sprint-1/02-project-structure.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-02 — Project structure](screenshots/sprint-1/02-project-structure.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
 
 ## 4. Create the KinD cluster
 
@@ -168,6 +226,19 @@ docker inspect gratitude-control-plane --format '{{.Config.Image}}' \
 
 KinD uses the node image bundled as the default for your installed KinD release. For subsequent recreations, use the recorded image with `kind create cluster --image IMAGE ...`. Record its digest too if you need identical image bytes. Do not mix arbitrary KinD and Kubernetes image versions without checking release compatibility.
 
+
+### Screenshot S1-03 — Cluster access
+
+> **Screenshot pending:** Show all three nodes Ready, the kind-gratitude context, and healthy system pods.
+>
+> Save as `docs/kind/screenshots/sprint-1/03-cluster.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-03 — Cluster access](screenshots/sprint-1/03-cluster.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
+
 ## 5. Create namespaces
 
 ```bash
@@ -191,6 +262,19 @@ kubectl --context kind-gratitude apply -f kind-lab/k8s/namespaces.yaml
 ```
 
 Namespaces separate the application, the observer, and the monitoring infrastructure. This also allows the observer to have narrowly scoped permissions.
+
+
+### Screenshot S1-04 — Namespaces
+
+> **Screenshot pending:** Show gratitude, health-system, and monitoring in kubectl get namespaces.
+>
+> Save as `docs/kind/screenshots/sprint-1/04-namespaces.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-04 — Namespaces](screenshots/sprint-1/04-namespaces.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
 
 ## 6. Implement the read-only health checker from scratch
 
@@ -379,7 +463,7 @@ EOF
 
 The Kubernetes client authenticates with kubeconfig when run on your laptop, or with the Pod's ServiceAccount inside the cluster. A single background thread polls every 15 seconds. HTTP routes read its cached snapshot and never modify Kubernetes. `/healthz` checks the web process; `/readyz` checks freshness of API access. Restart counts are gauges because a replaced pod's count can reset.
 
-This is foundational observation, not the complete Sprint 2 health policy. CPU/memory are collected by the monitoring stack; Metrics Server and HPA are addressed in Sprint 4.
+This sprint implements foundational observation. CPU/memory are collected by the monitoring stack; autoscaling and custom health policies are outside this guide.
 
 ### 6.3 Optional local smoke test
 
@@ -400,6 +484,19 @@ curl -fsS http://127.0.0.1:8000/api/summary | python3 -m json.tool
 ```
 
 Initially the namespace has no application pods. An empty pod list is expected. Local kubeconfig generally has administrator rights; the in-cluster deployment below deliberately has fewer permissions. Stop local uvicorn with Ctrl+C before using port 8000 for port-forwarding.
+
+
+### Screenshot S1-05 — Local health-checker smoke test (optional)
+
+> **Screenshot pending:** If you ran the optional smoke test, show /readyz and /api/summary. Otherwise record that this optional check was skipped.
+>
+> Save as `docs/kind/screenshots/sprint-1/05-local-api.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-05 — Local health-checker smoke test](screenshots/sprint-1/05-local-api.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
 
 ## 7. Build and load the Docker image
 
@@ -426,6 +523,19 @@ kind load docker-image gratitude/healthchecker:sprint1 --name gratitude
 ```
 
 The image must be loaded into KinD; the host Docker image store is separate from the node container runtime's image store. Build natively on Apple Silicon to avoid unnecessary cross-architecture emulation. Use one uvicorn worker so this simple in-process metric registry and poller have one owner.
+
+
+### Screenshot S1-06 — Image build and load
+
+> **Screenshot pending:** Show the successful health-checker Docker build and kind image load.
+>
+> Save as `docs/kind/screenshots/sprint-1/06-image.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-06 — Image build and load](screenshots/sprint-1/06-image.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
 
 ## 8. Configure least-privilege Kubernetes API access
 
@@ -507,6 +617,19 @@ kubectl --context kind-gratitude auth can-i list pods -n kube-system \
 ```
 
 Expected: `yes`, `yes`, `no`, `no`, `no`. Negative checks return a nonzero exit status; run them individually if your shell has `set -e`. Do not resolve a `403` by binding `cluster-admin`. Inspect the missing resource, verb, and namespace instead.
+
+
+### Screenshot S1-07 — Read-only RBAC
+
+> **Screenshot pending:** Show the auth can-i results: yes, yes, no, no, no.
+>
+> Save as `docs/kind/screenshots/sprint-1/07-rbac.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-07 — Read-only RBAC](screenshots/sprint-1/07-rbac.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
 
 ## 9. Deploy the health checker
 
@@ -614,6 +737,19 @@ curl -fsS http://127.0.0.1:8000/metrics
 ```
 
 Open `http://127.0.0.1:8000/docs` for Swagger UI. These routes require no application authentication and are exposed only through a localhost port-forward in this lab.
+
+
+### Screenshot S1-08 — Deployed observer and API
+
+> **Screenshot pending:** Show the available healthchecker Deployment, readiness, and API output or Swagger UI.
+>
+> Save as `docs/kind/screenshots/sprint-1/08-observer-api.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-08 — Deployed observer and API](screenshots/sprint-1/08-observer-api.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
 
 ## 10. Deploy GratitudeApp locally
 
@@ -814,6 +950,19 @@ kubectl --context kind-gratitude port-forward -n gratitude \
 
 Open `http://127.0.0.1:8080`. This verifies static frontend serving only: the browser's `/api/...` calls need a shared reverse proxy/ingress, which is deliberately not installed in this baseline. Use the direct backend commands above for the Sprint 1 data-path test. A complete browser experience requires adding routes equivalent to the existing `ingress-service.yml`, including its path rewrites. Do not claim that a rendered frontend proves those routes work.
 
+
+### Screenshot S1-09 — Application deployment and journal round trip
+
+> **Screenshot pending:** Show application deployments/PVC readiness and a successful journal create/list response. Use two images if needed.
+>
+> Save as `docs/kind/screenshots/sprint-1/09-application.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-09 — Application deployment and journal round trip](screenshots/sprint-1/09-application.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
+
 ## 11. Install Prometheus, Grafana, and Alertmanager
 
 ### 11.1 Select and record a chart version
@@ -924,6 +1073,19 @@ The chart installs Prometheus Operator CRDs, Prometheus, Alertmanager, Grafana, 
 
 Do not apply a ServiceMonitor before its CRD exists.
 
+
+### Screenshot S1-10 — Monitoring installation
+
+> **Screenshot pending:** Show the Helm release, running monitoring pods, and bound PVCs.
+>
+> Save as `docs/kind/screenshots/sprint-1/10-monitoring.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-10 — Monitoring installation](screenshots/sprint-1/10-monitoring.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
+
 ## 12. Connect the health checker to Prometheus
 
 ```bash
@@ -952,6 +1114,19 @@ kubectl --context kind-gratitude get servicemonitor -n health-system
 ```
 
 `port: http` refers to the **Service port name**, not the container name or a numeric port string. The Service selector finds the Pod; the ServiceMonitor selector finds the Service; Prometheus's selectors find the ServiceMonitor. All three links must match.
+
+
+### Screenshot S1-11 — ServiceMonitor configuration
+
+> **Screenshot pending:** Show the healthchecker ServiceMonitor and matching Service labels/port.
+>
+> Save as `docs/kind/screenshots/sprint-1/11-servicemonitor.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-11 — ServiceMonitor configuration](screenshots/sprint-1/11-servicemonitor.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
 
 ## 13. Open Prometheus and Grafana
 
@@ -993,6 +1168,19 @@ sum by (pod) (container_memory_working_set_bytes{namespace="gratitude",container
 
 The first query reports CPU cores, the second bytes. These are kubelet/cAdvisor metrics, not measurements made by the Python app.
 
+
+### Screenshot S1-12 — Prometheus targets and queries
+
+> **Screenshot pending:** Show the healthchecker target UP, collection success = 1, and representative custom/cluster metric results.
+>
+> Save as `docs/kind/screenshots/sprint-1/12-prometheus.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-12 — Prometheus targets and queries](screenshots/sprint-1/12-prometheus.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
+
 Get the Grafana admin password locally:
 
 ```bash
@@ -1000,9 +1188,22 @@ kubectl --context kind-gratitude get secret monitoring-grafana -n monitoring \
   -o jsonpath='{.data.admin-password}' | base64 --decode
 ```
 
-Open `http://127.0.0.1:3000`, sign in as `admin`, and use **Explore** with the Prometheus data source to run `healthchecker_node_ready`. Existing Kubernetes dashboards provide initial cluster visibility. A custom project dashboard is Sprint 6 work.
+Open `http://127.0.0.1:3000`, sign in as `admin`, and use **Explore** with the Prometheus data source to run `healthchecker_node_ready`. Existing Kubernetes dashboards provide initial cluster visibility. A custom final dashboard is outside this sprint.
 
-Alertmanager is installed as groundwork. Slack routing and end-to-end notification tests remain Sprint 5 work; installing the chart does not mean those notifications are configured.
+Alertmanager is installed as part of the chart only. Custom notification routing and Slack delivery are outside this sprint.
+
+
+### Screenshot S1-13 — Grafana Explore
+
+> **Screenshot pending:** Show healthchecker_node_ready returning three ready-node series in Grafana Explore. Do not capture the admin password.
+>
+> Save as `docs/kind/screenshots/sprint-1/13-grafana.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-13 — Grafana Explore](screenshots/sprint-1/13-grafana.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
 
 ## 14. Validate that discovery follows a workload change
 
@@ -1031,6 +1232,19 @@ kubectl --context kind-gratitude delete service/sprint1-observer-test \
 
 After the next collection, the API should stop listing them. Prometheus may show the old sample until its next successful scrape marks the removed series stale. Historical range queries retain earlier samples. This verifies discovery and metric lifecycle, not custom auto-healing.
 
+
+### Screenshot S1-14 — Dynamic workload discovery
+
+> **Screenshot pending:** Show the temporary workload appearing and then disappearing from the health-checker snapshot. Attach before/after images if useful.
+>
+> Save as `docs/kind/screenshots/sprint-1/14-discovery.png`. Result/date: _pending_.
+
+<!-- Uncomment after saving your screenshot:
+![S1-14 — Dynamic workload discovery](screenshots/sprint-1/14-discovery.png)
+-->
+
+**Local observations:** _Add your result or any fix required._
+
 ## 15. Capture evidence and decide whether Sprint 1 is complete
 
 ```bash
@@ -1044,23 +1258,23 @@ curl -fsS http://127.0.0.1:8000/metrics > kind-lab/evidence/metrics.txt
 helm list --kube-context kind-gratitude -n monitoring > kind-lab/evidence/helm.txt
 ```
 
-Capture screenshots of the three Ready nodes, application pods, Swagger API response, Prometheus target `UP`, and Grafana Explore result. Do not include passwords or API keys in screenshots.
+Attach your screenshots in slots S1-01 through S1-14 above. The local smoke-test slot S1-05 is optional. Mark each acceptance item below only after confirming its expected result; record failures and fixes in §18.
 
-| Requirement | Completion evidence |
-|---|---|
-| Project structure | `kind-lab/` has readable source, manifests, and recorded versions |
-| Local cluster | Three nodes are Ready; system pods are healthy |
-| Kubernetes access | Nodes, pods, services, and deployments appear in API responses |
-| RBAC | Read checks pass; pod deletion and secret access are denied |
-| Containerization | Image builds, loads into KinD, and Deployment becomes Available |
-| Application | Ten deployments become ready; journal create/list round trip succeeds |
-| Prometheus | Cluster targets and health-checker target are UP |
-| Metrics | Custom readiness metrics and Kubernetes resource metrics return samples |
-| Grafana | Prometheus data source can query the custom metric |
-| Dynamic discovery | Temporary workload appears and disappears from the snapshot |
-| Honest scope | S3, AI, browser ingress, custom alerts, and healing are not claimed complete |
+| Done | Requirement | Completion evidence |
+|---|---|---|
+| ☐ | Project structure | `kind-lab/` has readable source, manifests, and recorded versions |
+| ☐ | Local cluster | Three nodes are Ready; system pods are healthy |
+| ☐ | Kubernetes access | Nodes, pods, services, and deployments appear in API responses |
+| ☐ | RBAC | Read checks pass; pod deletion and secret access are denied |
+| ☐ | Containerization | Image builds, loads into KinD, and Deployment becomes Available |
+| ☐ | Application | Ten deployments become ready; journal create/list round trip succeeds |
+| ☐ | Prometheus | Cluster targets and health-checker target are UP |
+| ☐ | Metrics | Custom readiness metrics and Kubernetes resource metrics return samples |
+| ☐ | Grafana | Prometheus data source can query the custom metric |
+| ☐ | Dynamic discovery | Temporary workload appears and disappears from the snapshot |
+| ☐ | Honest scope | S3, AI, browser ingress, custom alerts, and healing are not claimed complete |
 
-**Do not move to Sprint 2 while basic API collection or scraping is failing.**
+**Keep Sprint 1 incomplete while basic API collection or scraping is failing.**
 
 ## 16. Troubleshooting
 
@@ -1109,18 +1323,19 @@ kind delete cluster --name gratitude
 
 This deletes this cluster and its local database/monitoring volumes. It does not remove your source files. Recreate with the cluster config, reload the local images, then reapply namespaces, RBAC, application secrets/manifests, health checker, Helm chart, and ServiceMonitor in the same order as this guide.
 
-## 18. Sprint boundaries and next documents
+## 18. Local execution summary — fill in after completing Sprint 1
 
-| Sprint | Implementation guide scope |
-|---|---|
-| 1 — this document | KinD, API access, containerization, read-only RBAC, application baseline, Prometheus |
-| 2 | Detailed conditions, CPU/memory interpretation, custom Prometheus rules, initial Grafana panels |
-| 3 | Opt-in healing, owner checks, grace periods, cooldowns, persistent audit, controlled failure tests |
-| 4 | Metrics Server, HPA, load tests, scheduling/balancing, clearly labeled KinD capacity simulation |
-| 5 | Slack integration, Alertmanager severity routes, secret handling, notification tests |
-| 6 | Final dashboard, history/audit views, full application routing/storage, runbook, end-to-end evidence |
+- **Execution date:** _pending_
+- **Machine and Docker resources:** _pending_
+- **KinD / Kubernetes / Helm versions:** _pending_
+- **Monitoring chart version:** _pending_
+- **Tasks completed:** _0 of 14; update after local execution_
+- **Screenshot references attached:** _pending_
+- **Failures encountered and fixes:** _pending_
+- **Remaining Sprint 1 issues:** _pending_
+- **Final result:** _not run / blocked / passed — select after validation_
 
-Future sprint guides should be separate `SPRINT-2.md` through `SPRINT-6.md` files. They are not implemented by this document.
+Do not mark the sprint passed until the acceptance checks in §15 have succeeded. A screenshot should show your actual local result, not an example expected output.
 
 ## References
 

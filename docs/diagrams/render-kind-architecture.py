@@ -1,7 +1,7 @@
 """Rasterize this diagram using ImageMagick primitives; avoids SVG delegate differences."""
-import math,re,subprocess,xml.etree.ElementTree as ET
+import math,re,subprocess,sys,xml.etree.ElementTree as ET
 from pathlib import Path
-p=Path(__file__).resolve().with_name('kind-architecture.svg')
+p=Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().with_name('kind-architecture.svg')
 root=ET.fromstring(p.read_text())
 css=root.find('{http://www.w3.org/2000/svg}style').text
 styles={c:dict(re.findall(r'([\w-]+):([^;]+)',body)) for c,body in re.findall(r'\.([\w-]+)\{([^}]+)\}',css)}
@@ -27,4 +27,4 @@ for e in list(root):
         dx,dy=x1-x0,y1-y0;l=math.hypot(dx,dy);ux,uy=dx/l,dy/l
         bx,by=x1-11*ux,y1-11*uy
         cmd.extend(['push graphic-context','fill "#52627a"','stroke none',f'polygon {x1},{y1} {bx-5*uy},{by+5*ux} {bx+5*uy},{by-5*ux}','pop graphic-context'])
-subprocess.run(['magick','-size','1920x1530','canvas:white','-font',('/System/Library/Fonts/Helvetica.ttc' if Path('/System/Library/Fonts/Helvetica.ttc').exists() else 'DejaVu-Sans'),'-draw','\n'.join(cmd),str(p.with_suffix('.png'))],check=True)
+subprocess.run(['magick','-size',f"{root.attrib['width']}x{root.attrib['height']}",'canvas:white','-font',('/System/Library/Fonts/Helvetica.ttc' if Path('/System/Library/Fonts/Helvetica.ttc').exists() else 'DejaVu-Sans'),'-draw','\n'.join(cmd),str(p.with_suffix('.png'))],check=True)
