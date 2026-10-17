@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1530" viewBox="0 0 1920 1530" role="img" aria-labelledby="title desc">
+<title id="title">KinD architecture — Kubernetes health checker and auto-healing, Sprints 1–6</title>
+<desc id="desc">Target architecture inside Docker Desktop: a three-node KinD cluster with GratitudeApp, a health checker and healing controller, Prometheus, Grafana, Alertmanager and external Slack. Sprint 1 is documented, not verified as deployed. Later capabilities are planned and drawn with dashed borders.</desc>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 Z" fill="#52627a"/></marker></defs>
+<rect width="1920" height="1530" fill="#f7f9fc"/>
+<style>text{font-family:Helvetica,Arial,sans-serif;fill:#182b46}.title{font-size:34px;font-weight:700}.sub{font-size:20px;fill:#52627a}.section{font-size:23px;font-weight:700}.node{font-size:23px;font-weight:700}.body{font-size:19px;fill:#41536d}.small{font-size:17px;fill:#52627a}.badge{font-size:16px;font-weight:700;fill:white}.edge{fill:none;stroke:#52627a;stroke-width:2;marker-end:url(#arrow)}.edgeplan{fill:none;stroke:#52627a;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#arrow)}</style>
+<text x="50" y="58" class="title">GratitudeApp · Kubernetes health checker &amp; auto-healing</text>
+<text x="50" y="93" class="sub">KinD target architecture  /  grouped by responsibility, mapped to the six project sprints</text>
+<rect x="50" y="115" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="59" y="134" class="badge">S1</text>
+<text x="103" y="135" class="small">Foundation</text>
+<rect x="280" y="115" width="43" height="26" rx="6" fill="#07856f" stroke="#07856f" stroke-width="1.6"/>
+<text x="289" y="134" class="badge">S2</text>
+<text x="333" y="135" class="small">Health &amp; rules</text>
+<rect x="535" y="115" width="43" height="26" rx="6" fill="#c06a13" stroke="#c06a13" stroke-width="1.6"/>
+<text x="544" y="134" class="badge">S3</text>
+<text x="588" y="135" class="small">Pod recovery</text>
+<rect x="775" y="115" width="43" height="26" rx="6" fill="#7c3aed" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="784" y="134" class="badge">S4</text>
+<text x="828" y="135" class="small">Scale &amp; balance</text>
+<rect x="1045" y="115" width="43" height="26" rx="6" fill="#d23869" stroke="#d23869" stroke-width="1.6"/>
+<text x="1054" y="134" class="badge">S5</text>
+<text x="1098" y="135" class="small">Notifications</text>
+<rect x="1295" y="115" width="43" height="26" rx="6" fill="#087d9e" stroke="#087d9e" stroke-width="1.6"/>
+<text x="1304" y="134" class="badge">S6</text>
+<text x="1348" y="135" class="small">Dashboard &amp; handover</text>
+<text x="50" y="178" class="sub">STATUS: Sprint 1 guide authored; deployment unverified. Sprints 2–6 are planned capabilities.</text>
+<rect x="90" y="205" width="500" height="110" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="526" y="220" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="535" y="239" class="badge">S1</text>
+<text x="110" y="241" class="node">Developer / application user</text>
+<text x="110" y="274" class="body">Docker build + kind load; kubectl + Helm</text>
+<rect x="1260" y="205" width="550" height="110" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="1697" y="220" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="1706" y="239" class="badge">S1</text>
+<rect x="1746" y="220" width="43" height="26" rx="6" fill="#087d9e" stroke="#087d9e" stroke-width="1.6"/>
+<text x="1755" y="239" class="badge">S6</text>
+<text x="1280" y="241" class="node">Operator / project reviewer</text>
+<text x="1280" y="274" class="body">localhost API :8000 · Grafana :3000</text>
+<rect x="40" y="335" width="1840" height="1000" rx="18" fill="#eef3f9" stroke="#879fbf" stroke-width="1.6"/>
+<text x="65" y="369" class="section">LOCAL MACHINE  /  Docker Desktop Linux VM</text>
+<text x="65" y="398" class="body">1 control-plane + 2 worker containers · shared laptop CPU and memory</text>
+<rect x="70" y="420" width="1780" height="875" rx="14" fill="#fff" stroke="#4b8ccf" stroke-width="1.6" stroke-dasharray="8 6"/>
+<text x="95" y="455" class="section">KinD cluster: gratitude</text>
+<text x="420" y="454" class="body">Local networking + standard StorageClass + namespace isolation</text>
+<rect x="1775" y="433" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="1784" y="452" class="badge">S1</text>
+<rect x="650" y="475" width="570" height="74" rx="12" fill="#eaf1ff" stroke="#99b5dd" stroke-width="1.6"/>
+<text x="673" y="506" class="node">Kubernetes API + built-in controllers</text>
+<text x="673" y="533" class="small">RBAC · scheduler · Deployment / ReplicaSet recovery</text>
+<rect x="95" y="575" width="505" height="650" rx="12" fill="#f3f7fc" stroke="#d4e0ee" stroke-width="1.6"/>
+<rect x="650" y="575" width="570" height="650" rx="12" fill="#f5f7fb" stroke="#d4e0ee" stroke-width="1.6"/>
+<rect x="1270" y="475" width="550" height="750" rx="12" fill="#f2f8fa" stroke="#d4e0ee" stroke-width="1.6"/>
+<text x="115" y="610" class="section">APPLICATION  /  namespace: gratitude</text>
+<text x="670" y="610" class="section">AUTOMATION  /  health-system</text>
+<text x="1290" y="510" class="section">OBSERVABILITY  /  monitoring</text>
+<rect x="115" y="635" width="465" height="95" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="516" y="650" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="525" y="669" class="badge">S1</text>
+<text x="135" y="671" class="node">React frontend</text>
+<text x="135" y="704" class="body">nginx :80 · Service port :3000</text>
+<rect x="115" y="775" width="465" height="145" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="516" y="790" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="525" y="809" class="badge">S1</text>
+<text x="135" y="811" class="node">Application services</text>
+<text x="135" y="844" class="body">API gateway + server-main + files API</text>
+<text x="135" y="870" class="body">Entries, moods, stats: REST / gRPC</text>
+<text x="135" y="896" class="body">Local Docker builds to KinD image store</text>
+<rect x="115" y="965" width="465" height="95" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="516" y="980" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="525" y="999" class="badge">S1</text>
+<text x="135" y="1001" class="node">PostgreSQL</text>
+<text x="135" y="1034" class="body">Local PVC · journal, moods and stats</text>
+<rect x="115" y="1090" width="465" height="110" rx="12" fill="#fff" stroke="#9aadc4" stroke-width="1.6" stroke-dasharray="8 6"/>
+<rect x="516" y="1105" width="43" height="26" rx="6" fill="#087d9e" stroke="#087d9e" stroke-width="1.6"/>
+<text x="525" y="1124" class="badge">S6</text>
+<text x="135" y="1126" class="node">Complete application access</text>
+<text x="135" y="1159" class="body">Shared /api routing + local S3 backend</text>
+<text x="135" y="1185" class="body">Optional OpenAI integration: external</text>
+<rect x="670" y="635" width="530" height="145" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="1087" y="650" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="1096" y="669" class="badge">S1</text>
+<rect x="1136" y="650" width="43" height="26" rx="6" fill="#07856f" stroke="#07856f" stroke-width="1.6"/>
+<text x="1145" y="669" class="badge">S2</text>
+<text x="690" y="671" class="node">FastAPI health checker</text>
+<text x="690" y="704" class="body">S1: read-only Kubernetes API polling</text>
+<text x="690" y="730" class="body">S2: readiness, conditions, resource checks</text>
+<text x="690" y="756" class="body">/healthz · /readyz · /api/* · /metrics</text>
+<rect x="670" y="830" width="530" height="145" rx="12" fill="#fff" stroke="#9aadc4" stroke-width="1.6" stroke-dasharray="8 6"/>
+<rect x="1136" y="845" width="43" height="26" rx="6" fill="#c06a13" stroke="#c06a13" stroke-width="1.6"/>
+<text x="1145" y="864" class="badge">S3</text>
+<text x="690" y="866" class="node">Opt-in healing controller</text>
+<text x="690" y="899" class="body">Owned pods only · grace + cooldown</text>
+<text x="690" y="925" class="body">Recover failed / stuck / crashing pods</text>
+<text x="690" y="951" class="body">Scoped write RBAC added in Sprint 3</text>
+<rect x="670" y="1025" width="530" height="95" rx="12" fill="#fff" stroke="#9aadc4" stroke-width="1.6" stroke-dasharray="8 6"/>
+<rect x="1136" y="1040" width="43" height="26" rx="6" fill="#c06a13" stroke="#c06a13" stroke-width="1.6"/>
+<text x="1145" y="1059" class="badge">S3</text>
+<text x="690" y="1061" class="node">Durable healing audit</text>
+<text x="690" y="1094" class="body">Action, reason, time and outcome</text>
+<rect x="670" y="1140" width="530" height="65" rx="12" fill="#fff" stroke="#9aadc4" stroke-width="1.6" stroke-dasharray="8 6"/>
+<rect x="1136" y="1155" width="43" height="26" rx="6" fill="#7c3aed" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="1145" y="1174" class="badge">S4</text>
+<text x="690" y="1176" class="node">Metrics Server / HPA / placement</text>
+<rect x="1290" y="550" width="510" height="145" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="1687" y="565" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="1696" y="584" class="badge">S1</text>
+<rect x="1736" y="565" width="43" height="26" rx="6" fill="#07856f" stroke="#07856f" stroke-width="1.6"/>
+<text x="1745" y="584" class="badge">S2</text>
+<text x="1310" y="586" class="node">Prometheus</text>
+<text x="1310" y="619" class="body">S1: scrape discovery + local TSDB PVC</text>
+<text x="1310" y="645" class="body">S2: thresholds + custom alert rules</text>
+<text x="1310" y="671" class="body">ServiceMonitor: /metrics</text>
+<rect x="1290" y="740" width="510" height="110" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="1687" y="755" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="1696" y="774" class="badge">S1</text>
+<rect x="1736" y="755" width="43" height="26" rx="6" fill="#07856f" stroke="#07856f" stroke-width="1.6"/>
+<text x="1745" y="774" class="badge">S2</text>
+<text x="1310" y="776" class="node">Cluster exporters</text>
+<text x="1310" y="809" class="body">kube-state-metrics + kubelet/cAdvisor</text>
+<text x="1310" y="835" class="body">Node/pod state · CPU · memory</text>
+<rect x="1290" y="895" width="510" height="125" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="1638" y="910" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="1647" y="929" class="badge">S1</text>
+<rect x="1687" y="910" width="43" height="26" rx="6" fill="#07856f" stroke="#07856f" stroke-width="1.6"/>
+<text x="1696" y="929" class="badge">S2</text>
+<rect x="1736" y="910" width="43" height="26" rx="6" fill="#087d9e" stroke="#087d9e" stroke-width="1.6"/>
+<text x="1745" y="929" class="badge">S6</text>
+<text x="1310" y="931" class="node">Grafana</text>
+<text x="1310" y="964" class="body">S1: install + Explore</text>
+<text x="1310" y="990" class="body">S2: initial panels · S6: final dashboard</text>
+<text x="1310" y="1016" class="body">Health, resource trends, healing counters</text>
+<rect x="1290" y="1065" width="510" height="135" rx="12" fill="#fff" stroke="#bbcadd" stroke-width="1.6"/>
+<rect x="1687" y="1080" width="43" height="26" rx="6" fill="#2563eb" stroke="#2563eb" stroke-width="1.6"/>
+<text x="1696" y="1099" class="badge">S1</text>
+<rect x="1736" y="1080" width="43" height="26" rx="6" fill="#d23869" stroke="#d23869" stroke-width="1.6"/>
+<text x="1745" y="1099" class="badge">S5</text>
+<text x="1310" y="1101" class="node">Alertmanager</text>
+<text x="1310" y="1134" class="body">S1: installed by monitoring chart</text>
+<text x="1310" y="1160" class="body">S5: severity routes + Slack receiver</text>
+<text x="1310" y="1186" class="body">S3 audit to S5 healing notifications</text>
+<path class="edge" d="M340 315 L50 315 L50 680 L115 680" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="104" y="555" class="small">S1: local build / deploy / port-forward</text>
+<path class="edge" d="M1535 315 L1835 315 L1835 958 L1800 958" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1445" y="340" class="small">UI access</text>
+<path class="edgeplan" d="M347 730 L347 775" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5"/>
+<text x="370" y="759" class="small">API routing: S6</text>
+<path class="edge" d="M347 920 L347 965" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="369" y="951" class="small">SQL / gRPC</text>
+<path class="edge" d="M670 662 L625 662 L625 510 L650 510" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="670" y="567" class="small">S1: read nodes, pods, services and deployments</text>
+<path class="edgeplan" d="M1200 878 L1240 878 L1240 520 L1220 520" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5"/>
+<text x="700" y="808" class="small">S3: delete eligible pod through API</text>
+<path class="edgeplan" d="M935 975 L935 1025" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5"/>
+<text x="954" y="1005" class="small">append audit</text>
+<path class="edge" d="M1290 645 L1200 645" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1218" y="723" class="small">scrape</text>
+<path class="edge" d="M1545 740 L1545 695" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1562" y="726" class="small">pull</text>
+<path class="edge" d="M1800 955 L1810 955 L1810 615 L1800 615" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)"/>
+<path class="edgeplan" d="M1290 675 L1255 675 L1255 1135 L1290 1135" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5"/>
+<text x="1290" y="1048" class="small">S2 alerts to S5 delivery</text>
+<text x="95" y="1264" class="body">S4 platform: Metrics Server to HPA to replicas; topology spread balances placement across workers.</text>
+<text x="95" y="1317" class="body">LOCAL STORAGE: PostgreSQL, Prometheus, Grafana + planned audit PVCs; survives pod restart, not cluster deletion.</text>
+<rect x="90" y="1370" width="665" height="100" rx="12" fill="#fff" stroke="#9aadc4" stroke-width="1.6" stroke-dasharray="8 6"/>
+<rect x="642" y="1385" width="43" height="26" rx="6" fill="#c06a13" stroke="#c06a13" stroke-width="1.6"/>
+<text x="651" y="1404" class="badge">S3</text>
+<rect x="691" y="1385" width="43" height="26" rx="6" fill="#7c3aed" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="700" y="1404" class="badge">S4</text>
+<text x="110" y="1406" class="node">Local operator exercises</text>
+<text x="110" y="1439" class="body">S3 chaos tests · S4 load / worker-capacity simulation</text>
+<rect x="1260" y="1370" width="550" height="100" rx="12" fill="#fff" stroke="#9aadc4" stroke-width="1.6" stroke-dasharray="8 6"/>
+<rect x="1746" y="1385" width="43" height="26" rx="6" fill="#d23869" stroke="#d23869" stroke-width="1.6"/>
+<text x="1755" y="1404" class="badge">S5</text>
+<text x="1280" y="1406" class="node">Slack  /  external notification destination</text>
+<text x="1280" y="1439" class="body">Webhook stored in Kubernetes Secret · delivery tests</text>
+<path class="edgeplan" d="M1545 1200 L1545 1370" fill="none" stroke="#52627a" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5"/>
+<text x="1565" y="1357" class="small">HTTPS webhook</text>
+<text x="800" y="1403" class="small">Solid card: Sprint 1 baseline</text>
+<text x="800" y="1434" class="small">Dashed card / flow: planned extension</text>
+<text x="50" y="1503" class="small">No EKS / ECR / AWS FIS required. KinD has fixed Docker nodes; S4 capacity simulation does not provision real machines.</text>
+</svg>

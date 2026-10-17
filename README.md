@@ -1,26 +1,55 @@
 # GratitudeApp — Kubernetes Cluster Health Checker and Auto-Healing
 
+This branch targets **KinD (Kubernetes in Docker)** for running GratitudeApp,
+monitoring cluster health, and developing self-healing locally. The target
+architecture covers Sprints 1–6 on a three-node cluster inside Docker Desktop.
+
 ## Architecture
 
-![Architecture Diagram](docs/diagrams/architecture.png)
+![KinD architecture with Sprint 1–6 assignments](docs/diagrams/kind-architecture.png)
 
-> **Key layers (left → right):**
-> 1. **GratitudeApp** — 9-service MERN/gRPC microservices in the `default` namespace, reachable via ingress-nginx NLB.
-> 2. **Health Checker** (FastAPI/Python) — polls the Kubernetes API every 15 s, exposes Prometheus metrics, and provides REST endpoints for live cluster state.
-> 3. **Monitoring stack** (`monitoring` namespace) — Prometheus scrapes `/metrics`, Grafana visualises dashboards, Alertmanager routes alerts to Slack.
-> 4. **AWS services** — ECR (health-checker image), S3 (file uploads), FIS (chaos / fault injection for self-healing validation).
+[Editable architecture diagram (SVG)](docs/diagrams/kind-architecture.svg) ·
+[Architecture details and sprint mapping](docs/kind/ARCHITECTURE.md) ·
+[Sprint 1 implementation guide](docs/kind/SPRINT-1.md)
+
+The diagram groups the system into three namespaces:
+
+1. **Application — `gratitude`:** nine GratitudeApp services and PostgreSQL,
+   using locally built images loaded into KinD and a local database PVC.
+2. **Automation — `health-system`:** a Python/FastAPI health checker reads the
+   Kubernetes API and exposes REST endpoints and Prometheus metrics. Planned
+   extensions add opt-in pod healing, scoped write permissions, and durable audits.
+3. **Observability — `monitoring`:** Prometheus scrapes the health checker and
+   cluster exporters; Grafana presents metrics; Alertmanager provides alert
+   routing, with external Slack delivery added in Sprint 5.
+
+### Sprint highlights
+
+| Sprint | Architecture contribution |
+|---|---|
+| **S1 — Foundation** | KinD cluster, application baseline, read-only API access, Docker images, RBAC, Prometheus and Grafana installation. |
+| **S2 — Health monitoring** | Detailed health checks, resource visibility, initial panels, and threshold-based alert rules. |
+| **S3 — Pod recovery** | Opt-in healing, ownership checks, grace periods, cooldowns, durable audits, and controlled failure tests. |
+| **S4 — Scaling and balancing** | Metrics Server, HPA, topology spread, load tests, and worker-capacity simulation. |
+| **S5 — Notifications** | Alertmanager severity routes, Slack webhook configuration, healing notifications, and delivery tests. |
+| **S6 — Dashboard and handover** | Final dashboards, audit presentation, application routing and storage integration, runbooks, and end-to-end validation. |
+
+**Status:** the Sprint 1 implementation guide is available; live deployment has
+not been verified. Sprint badges show where capabilities belong, not completed
+implementation. Dashed cards and flows identify planned extensions; components
+with multiple badges are introduced early and enhanced in later sprints.
+
+KinD workers share the laptop's resources. Sprint 4 capacity simulation does not
+provision real machines. Local PVCs survive pod recreation but are lost when the
+cluster is deleted. AWS EKS, ECR, NLB, FIS, IRSA, and EBS are not required for this
+local architecture.
+
+> **Documentation note:** the sections below retain the original EKS project
+> background, scripts, and sprint history. For this branch's local setup, follow
+> the [KinD Sprint 1 guide](docs/kind/SPRINT-1.md); the EKS provisioning and teardown
+> commands below are not KinD instructions.
 
 ---
-
-This project hosts **GratitudeApp** (a 9-service MERN/gRPC
-microservices app) on Amazon EKS, and builds an automated **health
-monitoring and self-healing tool** around it. The health-checker
-watches GratitudeApp's nodes, pods, and deployments, detects and
-recovers from common failure modes (failed pods, unresponsive nodes,
-resource imbalance), sends real-time alerts to Slack, and exposes a
-Grafana dashboard for live and historical visibility. AWS Fault
-Injection Simulator (FIS) is used to deliberately trigger failures so
-the self-healing behavior can be demonstrated end-to-end.
 
 ## Problem Statement
 
