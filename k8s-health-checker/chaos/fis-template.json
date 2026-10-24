@@ -5,7 +5,7 @@
       "resourceType": "aws:eks:pod",
       "selectionMode": "COUNT(1)",
       "parameters": {
-        "clusterIdentifier": "mck-demo",
+        "clusterIdentifier": "gratitude-health-cluster",
         "namespace": "default",
         "selectorType": "deploymentName",
         "selectorValue": "server-deployment"
@@ -32,5 +32,5 @@
       "source": "none"
     }
   ],
-  "roleArn": "arn:aws:iam::181160818749:role/awsfis-demo-prashant"
+  "roleArn": "arn:aws:iam::514454346119:role/awsfis_demo"
 }

@@ -22,7 +22,7 @@ spec:
     kind: Deployment
     name: api-gateway-deployment
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 1
   metrics:
     - type: Resource
       resource:
@@ -58,7 +58,7 @@ spec:
     kind: Deployment
     name: client-deployment
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 1
   metrics:
     - type: Resource
       resource:
@@ -94,7 +94,7 @@ spec:
     kind: Deployment
     name: server-deployment
   minReplicas: 1
-  maxReplicas: 4
+  maxReplicas: 1
   metrics:
     - type: Resource
       resource:
