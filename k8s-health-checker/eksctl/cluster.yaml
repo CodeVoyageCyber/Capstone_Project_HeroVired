@@ -16,7 +16,7 @@ kind: ClusterConfig
 metadata:
   name: gratitude-health-cluster
   region: us-east-1
-  version: "1.30"
+  version: "1.37"
 
 iam:
   withOIDC: true
