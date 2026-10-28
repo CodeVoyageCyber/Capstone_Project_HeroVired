@@ -158,7 +158,7 @@ long the cluster stays up and how long the NLB runs.
 
 ## Sprint-by-Sprint Progress
 
-### Sprint 1: Project Setup and Kubernetes Cluster Access ✅
+### Sprint 1: Project Setup and Kubernetes Cluster Access
 
 **Goal:** Establish a foundation for the project by setting up the
 necessary environment, tools, and access to Kubernetes resources, and
@@ -287,12 +287,12 @@ stack in the `monitoring` namespace.
 
 ---
 
-### Sprint 2: Health Monitoring Module (Node & Pod Checks) ⬜ Planned
+### Sprint 2: Health Monitoring Module (Node & Pod Checks)
 
 **Goal:** Enable basic health checks on nodes and pods and set up
 alerts for critical issues.
 
-**Planned work:**
+**Work scope:**
 - Extend `monitor.py`'s checks: add per-pod readiness/condition
   detail, and per-deployment "all replicas available" status for each
   GratitudeApp service (client, api-gateway, entries, moods, stats,
@@ -308,12 +308,12 @@ alerts for critical issues.
 
 ---
 
-### Sprint 3: Self-Healing Mechanisms (Pod Recovery) ⬜ Planned
+### Sprint 3: Self-Healing Mechanisms (Pod Recovery)
 
 **Goal:** Automate pod recovery processes and ensure that self-healing
 actions are logged for transparency.
 
-**Planned work:**
+**Work scope:**
 - Add a self-healing module to `healthchecker-app/` that detects and
   restarts/deletes unresponsive or failed GratitudeApp pods (using
   `delete` on pods owned by a Deployment, letting the ReplicaSet
@@ -331,12 +331,12 @@ actions are logged for transparency.
 
 ---
 
-### Sprint 4: Advanced Self-Healing (Node Scaling & Resource Balancing) ⬜ Planned
+### Sprint 4: Advanced Self-Healing (Node Scaling & Resource Balancing)
 
 **Goal:** Ensure the system can scale and balance resources
 automatically, optimizing cluster performance and cost.
 
-**Planned work:**
+**Work scope:**
 - Integrate the Kubernetes Cluster Autoscaler (or Karpenter) on EKS so
   the node group (min 1 / max 3, already configured in
   `eksctl/cluster.yaml`) can scale up/down based on demand.
@@ -349,12 +349,12 @@ automatically, optimizing cluster performance and cost.
 
 ---
 
-### Sprint 5: Alerting and Notification System Integration ⬜ Planned
+### Sprint 5: Alerting and Notification System Integration
 
 **Goal:** Implement a comprehensive alerting and notification system to
 keep the team informed of critical events and actions.
 
-**Planned work:**
+**Work scope:**
 - Add a Slack notifier module to `healthchecker-app/` using the Slack
   API (incoming webhook) for real-time notifications.
 - Configure Alertmanager routing/receivers for multiple severity
@@ -366,13 +366,13 @@ keep the team informed of critical events and actions.
 
 ---
 
-### Sprint 6: Web Dashboard and Project Documentation ⬜ Planned
+### Sprint 6: Web Dashboard and Project Documentation
 
 **Goal:** Deliver a user-friendly dashboard for monitoring cluster
 health and document the project for deployment in real-world
 environments.
 
-**Planned work:**
+**Work scope:**
 - Build out Grafana dashboards showing live health status of
   GratitudeApp's services, historical trends, and auto-healing/FIS
   experiment logs.
@@ -388,8 +388,7 @@ environments.
 
 ## Implementation and Migration: Minikube to EKS
 
-The sprint section above is preserved as the original scope and work plan,
-including its historical status labels. **All six sprints were implemented first
+The sprint section above describes the original scope of work. **All six sprints were implemented first
 on Minikube and then transferred to EKS**; the implementation and migration
 references below describe that sequence separately from the plan.
 
@@ -402,6 +401,8 @@ health-checker image. Subsequent sprints add readiness metrics, healing,
 resource distribution reports, notifications, and Grafana dashboards.
 
 ### Phase 2: Transfer the stack to Amazon EKS
+
+[EKS transfer snapshot (Word document)](docs/eks_migration/EKS_Capstone.docx)
 
 The [Minikube-to-EKS migration guide](docs/eks_migration/minikube-to-eks-migration.md)
 describes the environment changes. The EKS runbooks below carry each sprint's
