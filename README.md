@@ -2,25 +2,25 @@
 
 ## Architecture
 
-![Architecture Diagram](docs/diagrams/architecture.png)
+![Architecture Diagram](docs/diagrams/architecture.svg)
 
-> **Key layers (left → right):**
-> 1. **GratitudeApp** — 9-service MERN/gRPC microservices in the `default` namespace, reachable via ingress-nginx NLB.
-> 2. **Health Checker** (FastAPI/Python) — polls the Kubernetes API every 15 s, exposes Prometheus metrics, and provides REST endpoints for live cluster state.
-> 3. **Monitoring stack** (`monitoring` namespace) — Prometheus scrapes `/metrics`, Grafana visualises dashboards, Alertmanager routes alerts to Slack.
-> 4. **AWS services** — ECR (health-checker image), S3 (file uploads), FIS (chaos / fault injection for self-healing validation).
+All six sprints were first implemented on **Minikube**, then transferred to
+**Amazon EKS**. The application, health-checker, and monitoring stack share the
+same Kubernetes design; ingress, persistent storage, image distribution, and
+AWS integrations differ between environments. See [Implementation and migration](#implementation-and-migration-minikube-to-eks)
+for the sprint runbooks and environment differences.
 
----
+The diagram shows the implemented Kubernetes stack and its deployment journey.
+Solid arrows show application, monitoring, and control flows; dashed arrows show
+optional integrations or environment-specific dependencies. The editable diagram
+source is [architecture.svg](docs/diagrams/architecture.svg).
 
-This project hosts **GratitudeApp** (a 9-service MERN/gRPC
-microservices app) on Amazon EKS, and builds an automated **health
-monitoring and self-healing tool** around it. The health-checker
-watches GratitudeApp's nodes, pods, and deployments, detects and
-recovers from common failure modes (failed pods, unresponsive nodes,
-resource imbalance), sends real-time alerts to Slack, and exposes a
-Grafana dashboard for live and historical visibility. AWS Fault
-Injection Simulator (FIS) is used to deliberately trigger failures so
-the self-healing behavior can be demonstrated end-to-end.
+GratitudeApp comprises nine application microservices plus PostgreSQL. A Python /
+FastAPI health-checker monitors nodes, pods, and deployments, deletes qualifying
+unhealthy pods so Kubernetes can recreate them, records healing actions, and
+reports pod distribution across nodes. Prometheus collects metrics, Grafana
+provides dashboards, and Alertmanager and the health-checker provide separate
+notification paths to Slack when configured.
 
 ## Problem Statement
 
@@ -62,12 +62,13 @@ entries, and stats — built as 9 microservices:
 | `postgres` | Database | 5432 |
 
 These run as-is using the existing Docker Hub images
-(`prashantdey/merndemoapp:*`) referenced in `gratitude-k8s/`.
+(`prashantdey/merndemoapp:*`) referenced in `k8s-health-checker/gratitude-k8s/`.
 
 ## Tools & Technologies
 
 | Tool | Purpose |
 |---|---|
+| Minikube | Local implementation and validation of all six sprints |
 | eksctl | Provision EKS cluster, VPC, EBS CSI driver addon, OIDC |
 | Amazon EKS | Managed Kubernetes cluster hosting GratitudeApp + health-checker |
 | Python (FastAPI) | Health-checker API, monitoring, and self-healing logic |
@@ -80,49 +81,45 @@ These run as-is using the existing Docker Hub images
 
 ## Project Structure
 
-```
-k8s-health-checker/
-├── healthchecker-app/         # Python/FastAPI health-checker application
-│   ├── main.py                  # FastAPI app & API routes
-│   ├── monitor.py               # Polling + Prometheus metrics
-│   ├── k8s_client.py            # Kubernetes API client helpers
-│   ├── requirements.txt
-│   └── Dockerfile
-├── gratitude-k8s/              # GratitudeApp's Kubernetes manifests (as provided)
-│   ├── *-deployment.yml
-│   ├── *-cluster-ip-service.yml
-│   ├── database-secret.yml
-│   ├── openai-api-secret.yml
-│   ├── storageclass-gp3-default.yml
-│   ├── ingress-service.yml
-│   └── postgres-migrate-job.yml
-├── chaos/                       # AWS FIS chaos-testing templates (for Sprint 3)
-│   ├── fis-template.json
-│   ├── rbac.yml
-│   ├── fis-sa-cluster-admin.yml
-│   └── fis-experiement-cluster-admin.yml
-├── eksctl/                       # EKS cluster config
-│   └── cluster.yaml               # eksctl ClusterConfig (VPC, node group, OIDC, EBS CSI addon)
-├── deploy/
-│   ├── healthchecker/
-│   │   ├── rbac.yaml             # health-checker ServiceAccount + ClusterRole
-│   │   └── deployment.yaml       # health-checker Deployment + Service
-│   └── prometheus/
-│       └── prometheus-values.yaml  # Helm values for kube-prometheus-stack
-├── scripts/
-│   ├── 00-build-and-push-healthchecker.sh
-│   ├── 01-provision-eks.sh
-│   ├── 02-deploy-gratitudeapp.sh
-│   ├── 03-deploy-monitoring.sh
-│   └── 99-teardown.sh
+```text
+.
+├── README.md
+├── Project_details.txt                # Original project requirements
+├── GratitudeApp-main/                 # Hosted application source
+│   ├── client/                         # React frontend
+│   └── k8s/                            # Application manifests in source project
+├── k8s-health-checker/                 # Health-checker and deployment automation
+│   ├── healthchecker-app/              # FastAPI, monitor, healer, balancer, Slack notifier
+│   ├── gratitude-k8s/                  # Application manifests used by deployment scripts
+│   ├── chaos/                         # AWS FIS templates and RBAC
+│   ├── eksctl/cluster.yaml             # Cluster config used by provisioning script
+│   ├── deploy/
+│   │   ├── healthchecker/              # Deployment, Service, RBAC
+│   │   ├── prometheus/                 # kube-prometheus-stack Helm values
+│   │   ├── grafana/                    # Sprint 2 and Sprint 6 dashboards
+│   │   ├── alerts/                     # PrometheusRules and Alertmanager config
+│   │   └── autoscaling/                # HPAs, load generator, optional node autoscaler
+│   ├── scripts/                       # Build/push, provision, deploy, teardown
+│   └── docs/SECRETS.md
+├── k8s-local/                         # Minikube storage and health-checker overrides
 ├── docs/
-│   └── SECRETS.md
-├── .gitignore
-└── README.md
+│   ├── minikube_implementation/        # Local setup and sprint implementation guides
+│   ├── eks_migration/                  # Migration overview and EKS sprint runbooks
+│   ├── diagrams/architecture.svg       # Current architecture diagram
+│   ├── alerting-and-notifications.md
+│   └── user-guide.md
+├── cluster.yaml                       # Separate root-level cluster configuration
+└── scripts/99-teardown.sh              # Root-level teardown helper
 ```
+
+Run the numbered deployment scripts from `k8s-health-checker/`. Its
+`eksctl/cluster.yaml` is the configuration used by the provisioning script;
+the root-level `cluster.yaml` is a separate copy and currently differs.
+
 
 ## Prerequisites
 
+- Minikube for the local implementation (see the [local setup guide](docs/minikube_implementation/Readme_Local.md))
 - AWS account + AWS CLI configured (`aws configure`)
 - `eksctl`
 - `kubectl`
@@ -141,12 +138,12 @@ This project runs on a small, short-lived EKS cluster:
 - ingress-nginx NLB: small hourly + per-GB cost while running
 - Prometheus retention set to 3 days, modest resource requests
 
-**Run `scripts/99-teardown.sh` after your demo/screenshots to avoid
+**From `k8s-health-checker/`, run `scripts/99-teardown.sh` after your demo/screenshots to avoid
 ongoing charges.** A typical end-to-end demo (provision → deploy →
 test → screenshot → destroy) costs roughly **$5-15** depending on how
 long the cluster stays up and how long the NLB runs.
 
-## Known Limitations (Sprint 1)
+## Configuration and Implementation Limits
 
 - `files-service` S3/IRSA is **not configured yet**. The pod may run
   but S3 upload/download calls will fail until an IAM role + service
@@ -155,7 +152,7 @@ long the cluster stays up and how long the NLB runs.
   needed).
 - `openai-api-secret.yml` contains a placeholder key. AI-assisted
   journal features will not work until a real OpenAI key is set (see
-  `docs/SECRETS.md`).
+  [secret configuration guide](k8s-health-checker/docs/SECRETS.md)).
 
 ---
 
@@ -386,6 +383,75 @@ environments.
   full GratitudeApp demo via the ingress URL, Grafana dashboards, and
   a chaos-experiment-triggered self-healing event), and teardown via
   `scripts/99-teardown.sh`.
+
+---
+
+## Implementation and Migration: Minikube to EKS
+
+The sprint section above is preserved as the original scope and work plan,
+including its historical status labels. **All six sprints were implemented first
+on Minikube and then transferred to EKS**; the implementation and migration
+references below describe that sequence separately from the plan.
+
+### Phase 1: Implement all sprints on Minikube
+
+The [local deployment guide](docs/minikube_implementation/Readme_Local.md)
+sets up GratitudeApp, the health-checker, and `kube-prometheus-stack`. Local
+overrides in `k8s-local/` use Minikube hostPath storage and a locally built
+health-checker image. Subsequent sprints add readiness metrics, healing,
+resource distribution reports, notifications, and Grafana dashboards.
+
+### Phase 2: Transfer the stack to Amazon EKS
+
+The [Minikube-to-EKS migration guide](docs/eks_migration/minikube-to-eks-migration.md)
+describes the environment changes. The EKS runbooks below carry each sprint's
+features onto the managed cluster, using the existing Docker Hub application
+images and an ECR-hosted health-checker image. This is a redeployment of the
+stack; the guides do not document copying local PostgreSQL volume data to EBS.
+
+| Sprint | Implemented capability | Minikube implementation | EKS transfer and verification |
+|---|---|---|---|
+| 1 | Application, PostgreSQL, Kubernetes API access, RBAC, monitoring foundation | [Local setup](docs/minikube_implementation/Readme_Local.md) | [EKS Sprint 1](docs/eks_migration/readme_eks_sprint1.md) |
+| 2 | Pod readiness, deployment availability, health dashboard, alert rules | [Local Sprint 2](docs/minikube_implementation/Readme_Local_Sprint2.md) | [EKS Sprint 2](docs/eks_migration/readme_eks_sprint2.md) |
+| 3 | Pod recovery, cooldown, healing audit log and metrics; failure testing | [Local Sprint 3](docs/minikube_implementation/Readme_Local_Sprint3.md) | [EKS Sprint 3](docs/eks_migration/readme_eks_sprint3.md) |
+| 4 | CPU-based HPAs, load testing, pod distribution and capacity reports | [Local Sprint 4](docs/minikube_implementation/Readme_Local_Sprint4.md) | [EKS Sprint 4](docs/eks_migration/readme_eks_sprint4.md) |
+| 5 | Health-checker notifications and severity-based Alertmanager routing | [Local Sprint 5](docs/minikube_implementation/Readme_Local_Sprint5.md) | [EKS Sprint 5](docs/eks_migration/readme_eks_sprint5.md) |
+| 6 | Full observability dashboard, documentation and end-to-end checks | [Local Sprint 6](docs/minikube_implementation/Readme_Local_Sprint6.md) | [EKS Sprint 6](docs/eks_migration/readme_eks_sprint6.md) |
+
+### What changed between environments
+
+| Component | Minikube | Amazon EKS |
+|---|---|---|
+| Cluster | Local Minikube cluster | eksctl-managed EKS cluster and EC2 managed node group |
+| Application entry | nginx ingress addon; local access / tunnel | AWS NLB → ingress-nginx → ClusterIP services |
+| Persistent storage | `k8s-local/storageclass-local.yaml`: class named `gp3`, backed by `k8s.io/minikube-hostpath` | EBS CSI-backed `gp3` storage for PostgreSQL and Prometheus |
+| Health-checker image | Local Docker build and local deployment override | Build/push to ECR; EKS deployment pulls the image |
+| Application images | Existing `prashantdey/merndemoapp:*` images | Same Docker Hub images |
+| Observability | Prometheus, Grafana, Alertmanager in `monitoring` | Same stack, dashboard ConfigMaps and PrometheusRules reapplied |
+| Internal service access | Port-forward health-checker, Grafana and Prometheus | Same port-forward approach; application ingress is public via NLB |
+| Failure testing | Local failure scenarios and recovery checks | Recovery checks plus optional AWS FIS experiment |
+| Node scaling | Local capacity; HPA depends on metrics-server | Optional Cluster Autoscaler after IAM, ASG tags and compatible image are configured |
+
+The implemented behavior has these configuration boundaries:
+
+- `healer.py` handles pod recovery; Kubernetes controllers recreate deleted
+  workload pods. Node readiness is monitored, rather than repaired directly.
+- `balancer.py` reports distribution and capacity metrics; it does not actively
+  move pods. The checked-in HPAs currently have both minimum and maximum replicas
+  set to **1**, so scale-out demonstrations require increasing the maximum.
+- AWS FIS is an optional EKS-only exercise. Cluster Autoscaler is also optional
+  and its checked-in manifest needs configuration before use.
+- Slack supports mock and live delivery. The current EKS health-checker manifest
+  references the `health-checker-slack` Secret; supply it with an empty webhook
+  for mock mode or a real webhook for live delivery. Alertmanager requires its
+  own receiver configuration. See [alerting and notifications](docs/alerting-and-notifications.md).
+- S3 file operations depend on files-service IAM/IRSA configuration; AI-assisted
+  entries require a valid OpenAI key. See [secrets](k8s-health-checker/docs/SECRETS.md).
+
+For setup, operation and troubleshooting, start with the [user guide](docs/user-guide.md)
+and follow the environment-specific sprint runbooks in order. Some older guides
+use paths relative to `k8s-health-checker/`; the project tree above shows their
+current locations from the repository root.
 
 ---
 

@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1110" viewBox="0 0 1440 1110" role="img" aria-labelledby="title desc"><title id="title">GratitudeApp: Minikube implementation to Amazon EKS</title><desc id="desc">All six sprints implemented locally then redeployed to EKS. Shared Kubernetes application, health-checker, monitoring and optional AWS integrations.</desc><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8Z" fill="#52657b"/></marker></defs><rect width="1440" height="1110" fill="#f5f7fb"/><style>text{font-family:Arial,sans-serif;fill:#20334b;font-size:15px}.title{font-size:28px;font-weight:bold}.head{font-size:18px;font-weight:bold}.small{font-size:13px}.line{fill:none;stroke:#52657b;stroke-width:2;marker-end:url(#arrow)}.optional{stroke-dasharray:6 5}</style>
+<text x="40" y="44" class="title">GratitudeApp | Kubernetes health monitoring and auto-healing</text>
+<text x="40" y="72" class="">Deployment journey: all six sprints implemented on Minikube, then transferred to Amazon EKS</text>
+<rect x="40" y="100" width="600" height="125" rx="10" fill="#eaf6f1" stroke="#ccd6e3"/>
+<text x="56" y="127" class="head">1  Local implementation · Minikube</text>
+<text x="56" y="152" class="">nginx addon + local access / tunnel · locally built health-checker</text>
+<text x="56" y="174" class="">HostPath storage (local StorageClass named gp3)</text>
+<text x="56" y="196" class="">Local failure tests · same application and observability stack</text>
+<rect x="790" y="100" width="610" height="125" rx="10" fill="#eaf1ff" stroke="#ccd6e3"/>
+<text x="806" y="127" class="head">2  Cloud deployment · Amazon EKS</text>
+<text x="806" y="152" class="">eksctl · managed EC2 node group · OIDC · single NAT gateway</text>
+<text x="806" y="174" class="">AWS NLB + ingress-nginx · EBS CSI / gp3 volumes</text>
+<text x="806" y="196" class="">ECR health-checker image · Docker Hub application images</text>
+<path d="M640 162 H790" class="line"/>
+<text x="675" y="148" class="small">Redeploy</text>
+<rect x="40" y="250" width="1360" height="700" rx="10" fill="#fff" stroke="#8098b8"/>
+<text x="56" y="277" class="head">Shared Kubernetes stack · local cluster or EKS cluster</text>
+<rect x="60" y="300" width="180" height="112" rx="10" fill="#f0f4fa" stroke="#ccd6e3"/>
+<text x="76" y="327" class="head">Users / operators</text>
+<text x="76" y="352" class="">App via ingress</text>
+<text x="76" y="374" class="">APIs / Grafana via</text>
+<text x="76" y="396" class="">kubectl port-forward</text>
+<rect x="280" y="300" width="290" height="112" rx="10" fill="#eaf1ff" stroke="#ccd6e3"/>
+<text x="296" y="327" class="head">Ingress · nginx</text>
+<text x="296" y="352" class="">Minikube: addon / tunnel</text>
+<text x="296" y="374" class="">EKS: AWS NLB → nginx</text>
+<text x="296" y="396" class="">Path routing to app services</text>
+<rect x="610" y="300" width="490" height="112" rx="10" fill="#eaf1ff" stroke="#ccd6e3"/>
+<text x="626" y="327" class="head">default namespace · GratitudeApp</text>
+<text x="626" y="352" class="">client · api-gateway · server-main · files-service</text>
+<text x="626" y="374" class="">entries-service · moods-api / moods-service</text>
+<text x="626" y="396" class="">stats-api / stats-service · REST + gRPC</text>
+<rect x="1140" y="300" width="240" height="112" rx="10" fill="#eaf1ff" stroke="#ccd6e3"/>
+<text x="1156" y="327" class="head">PostgreSQL</text>
+<text x="1156" y="352" class="">PVC-backed database</text>
+<text x="1156" y="374" class="">Local: hostPath</text>
+<text x="1156" y="396" class="">EKS: EBS gp3</text>
+<path d="M240 354 H280" class="line"/>
+<path d="M570 354 H610" class="line"/>
+<path d="M1100 354 H1140" class="line"/>
+<rect x="280" y="475" width="360" height="155" rx="10" fill="#eaf6f1" stroke="#ccd6e3"/>
+<text x="296" y="502" class="head">Health-checker · default namespace</text>
+<text x="296" y="527" class="">FastAPI :8000 · /metrics · REST API</text>
+<text x="296" y="549" class="">Monitor · healer · balance reports</text>
+<text x="296" y="571" class="">Healing audit + notification history</text>
+<text x="296" y="593" class="">ServiceAccount + ClusterRole / Binding</text>
+<rect x="740" y="475" width="360" height="155" rx="10" fill="#eaf6f1" stroke="#ccd6e3"/>
+<text x="756" y="502" class="head">Kubernetes API + controllers</text>
+<text x="756" y="527" class="">Read nodes, pods and deployments</text>
+<text x="756" y="549" class="">Delete qualifying unhealthy pods</text>
+<text x="756" y="571" class="">ReplicaSet / Deployment recreates pods</text>
+<text x="756" y="593" class="">HPA targets client, gateway and server</text>
+<path d="M640 520 H740" class="line"/>
+<text x="650" y="505" class="small">Poll / heal via RBAC</text>
+<path d="M920 475 V412" class="line"/>
+<text x="930" y="453" class="small">Reconcile workloads</text>
+<rect x="1140" y="475" width="240" height="155" rx="10" fill="#fff7e8" stroke="#ccd6e3"/>
+<text x="1156" y="502" class="head">Resource scaling</text>
+<text x="1156" y="527" class="">metrics-server → HPA</text>
+<text x="1156" y="549" class="">CPU-based replica policy</text>
+<text x="1156" y="571" class="">Current replica cap: 1</text>
+<text x="1156" y="593" class="">Node scaling: optional</text>
+<path d="M1140 552 H1100" class="line"/>
+<rect x="280" y="705" width="1100" height="215" rx="10" fill="#f5f0ff" stroke="#ccd6e3"/>
+<text x="296" y="732" class="head">monitoring namespace · kube-prometheus-stack</text>
+<rect x="300" y="760" width="280" height="130" rx="10" fill="#fff" stroke="#ccd6e3"/>
+<text x="316" y="787" class="head">Prometheus</text>
+<text x="316" y="812" class="">Scrapes health-checker /metrics</text>
+<text x="316" y="834" class="">Cluster metrics + alert rules</text>
+<text x="316" y="856" class="">Persistent metrics storage</text>
+<rect x="650" y="760" width="310" height="130" rx="10" fill="#fff" stroke="#ccd6e3"/>
+<text x="666" y="787" class="head">Grafana</text>
+<text x="666" y="812" class="">Prometheus data source</text>
+<text x="666" y="834" class="">Sprint 2: node / pod health</text>
+<text x="666" y="856" class="">Sprint 6: full observability</text>
+<rect x="1040" y="760" width="310" height="130" rx="10" fill="#fff" stroke="#ccd6e3"/>
+<text x="1056" y="787" class="head">Alertmanager</text>
+<text x="1056" y="812" class="">Receives Prometheus alerts</text>
+<text x="1056" y="834" class="">Severity-based routing</text>
+<text x="1056" y="856" class="">Configured Slack receivers</text>
+<path d="M440 760 V630" class="line"/>
+<text x="452" y="673" class="small">Scrape</text>
+<path d="M650 815 H580" class="line"/>
+<text x="585" y="800" class="small">Query metrics</text>
+<path d="M580 870 H620 V910 H1015 V825 H1040" class="line"/>
+<text x="780" y="904" class="small">Alert rules</text>
+<rect x="60" y="705" width="180" height="215" rx="10" fill="#fff7e8" stroke="#ccd6e3"/>
+<text x="76" y="732" class="head">Slack</text>
+<text x="76" y="757" class="">Optional live webhooks</text>
+<text x="76" y="779" class="">or mock notifications</text>
+<text x="76" y="801" class=""></text>
+<text x="76" y="823" class="">Two notification paths:</text>
+<text x="76" y="845" class="">health-checker actions</text>
+<text x="76" y="867" class="">Alertmanager alerts</text>
+<path d="M280 575 H150 V705" class="line optional"/>
+<path d="M1195 890 V937 H150 V920" class="line optional"/>
+<rect x="40" y="980" width="430" height="95" rx="10" fill="#fff7e8" stroke="#ccd6e3"/>
+<text x="56" y="1007" class="head">Optional AWS integrations</text>
+<text x="56" y="1032" class="">files-service → S3 (requires IAM / IRSA)</text>
+<text x="56" y="1054" class="">AWS FIS → EKS pods (configured experiments)</text>
+<rect x="500" y="980" width="440" height="95" rx="10" fill="#fff7e8" stroke="#ccd6e3"/>
+<text x="516" y="1007" class="head">Optional EKS node autoscaling</text>
+<text x="516" y="1032" class="">Cluster Autoscaler → EC2 Auto Scaling Group</text>
+<text x="516" y="1054" class="">Requires IAM, ASG discovery tags, matching version</text>
+<rect x="970" y="980" width="430" height="95" rx="10" fill="#f0f4fa" stroke="#ccd6e3"/>
+<text x="986" y="1007" class="head">Implementation boundaries</text>
+<text x="986" y="1032" class="">Balance module reports; it does not move pods</text>
+<text x="986" y="1054" class="">Solid: core flow · Dashed: optional integration</text>
+<path d="M255 980 V950" class="line optional"/>
+<path d="M720 980 V950" class="line optional"/>
+</svg>
