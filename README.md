@@ -156,241 +156,168 @@ long the cluster stays up and how long the NLB runs.
 
 ---
 
-## Sprint-by-Sprint Progress
+## Sprint-by-Sprint Progress: Minikube Implementation
+
+All six sprints were first implemented on a local Minikube cluster. The
+summaries below describe that local work; the following migration section
+explains how the stack was transferred to Amazon EKS. Paths are relative to
+the repository root.
 
 ### Sprint 1: Project Setup and Kubernetes Cluster Access
 
-**Goal:** Establish a foundation for the project by setting up the
-necessary environment, tools, and access to Kubernetes resources, and
-get GratitudeApp running on EKS.
+**Goal:** Establish local Kubernetes access and deploy GratitudeApp with the
+health-checker and monitoring foundation.
 
-**What was done:**
+**Implementation on Minikube:**
 
-1. **Project structure and repository initialized.**
-   The repo is organized into: `healthchecker-app/` (the Python/
-   FastAPI health-checker service we're building), `gratitude-k8s/`
-   (the existing GratitudeApp Kubernetes manifests, used as-is),
-   `chaos/` (AWS FIS templates for fault injection, used in Sprint 3),
-   `eksctl/` (EKS cluster config), `deploy/` (manifests and
-   Helm values for the health-checker and Prometheus stack), and
-   `scripts/` (numbered, ordered automation scripts).
+- Started Minikube with the Docker driver and enabled the nginx ingress and
+  metrics-server addons.
+- Used `k8s-local/storageclass-local.yaml` to provide a StorageClass named
+  `gp3` backed by Minikube hostPath storage, replacing the AWS EBS provisioner.
+- Deployed the manifests in `k8s-health-checker/gratitude-k8s/` in dependency
+  order: secrets and configuration, PostgreSQL with its PVC, backend services,
+  frontend, ingress, and the database migration job. Application containers
+  used the existing `prashantdey/merndemoapp:*` Docker Hub images.
+- Built the health-checker image inside Minikube's Docker environment and used
+  the local deployment and service overrides in `k8s-local/`.
+- Applied the health-checker ServiceAccount and RBAC, then verified node, pod,
+  deployment, summary, and metrics endpoints against the local Kubernetes API.
+- Installed Prometheus, Grafana, and Alertmanager in the `monitoring` namespace
+  using `kube-prometheus-stack`. Accessed the application through local ingress
+  and internal monitoring services through port-forwarding.
 
-2. **Kubernetes cluster access configured via eksctl on EKS.**
-   `eksctl/cluster.yaml` defines a single `ClusterConfig` that
-   provisions everything needed in one command:
-   - A VPC with a **single NAT gateway** (`vpc.nat.gateway: Single`)
-     to minimize cost.
-   - One managed node group of **2x t3.medium** nodes (min 1, max 3 —
-     headroom for Sprint 4's scaling demo), with a 20GB disk each.
-   - **OIDC provider enabled** (`iam.withOIDC: true`), needed for
-     IRSA-based access such as the EBS CSI driver now and
-     files-service-sa / FIS later.
-   - The **aws-ebs-csi-driver addon** with `wellKnownPolicies`
-     (required by GratitudeApp's `gp3` StorageClass and Postgres PVC) —
-     eksctl automatically creates the IAM role and IRSA binding for
-     this addon.
-   `scripts/01-provision-eks.sh` runs `eksctl create cluster -f
-   eksctl/cluster.yaml` (which also configures kubectl automatically),
-   then installs **ingress-nginx** via Helm (matching GratitudeApp's
-   `ingressClassName: nginx`), exposed via an AWS Network Load
-   Balancer.
+**Result:** A local application and monitoring stack ready for the remaining
+sprints, without requiring EKS provisioning or an ECR image push.
 
-3. **GratitudeApp deployed using its existing manifests and images.**
-   `gratitude-k8s/` contains the original manifests from the
-   GratitudeApp repo, applied in dependency order by
-   `scripts/02-deploy-gratitudeapp.sh`: StorageClass → secrets/config →
-   Postgres (PVC + Deployment + Service) → backend microservices
-   (api-gateway, entries, moods-api/service, stats-api/service,
-   files-service, server-main) → frontend client → ingress → one-time
-   DB migration job. All services use the existing
-   `prashantdey/merndemoapp:*` images from Docker Hub — no rebuilding
-   needed for Sprint 1.
-
-4. **Basic API access to Kubernetes resources, via the health-checker.**
-   `deploy/healthchecker/rbac.yaml` defines a `health-checker`
-   ServiceAccount (in the `default` namespace, alongside GratitudeApp)
-   with a ClusterRole granting read access to nodes/pods/services/
-   events, and update access to deployments/replicasets/HPAs for
-   self-healing in later sprints.
-
-   `healthchecker-app/` is a small **FastAPI** service:
-   - `k8s_client.py` wraps the official Kubernetes Python client,
-     using in-cluster config (via the `health-checker` ServiceAccount)
-     or falling back to local kubeconfig for development.
-   - `monitor.py` polls nodes, pods, and deployments in the `default`
-     namespace every 15 seconds and updates Prometheus gauges
-     (`healthchecker_node_ready`, `healthchecker_pod_restarts_total`,
-     `healthchecker_pod_phase_running`,
-     `healthchecker_deployment_available_replicas`, etc.).
-   - `main.py` exposes `/healthz`, `/metrics` (Prometheus format),
-     `/api/nodes`, `/api/pods`, `/api/deployments`, and `/api/summary`
-     — proving the app can authenticate to and query the Kubernetes
-     API for GratitudeApp's resources.
-   - `Dockerfile` packages the app as a small Python container image.
-
-5. **Prometheus installed and configured for Kubernetes.**
-   `deploy/prometheus/prometheus-values.yaml` configures the
-   `kube-prometheus-stack` Helm chart (Prometheus + Grafana +
-   Alertmanager) with conservative resource requests, 3-day retention,
-   `gp3` storage for Prometheus data, and an `additionalScrapeConfigs`
-   entry that scrapes the health-checker's `/metrics` endpoint via its
-   pod annotations. This lays the groundwork for Sprint 2 (dashboards),
-   Sprint 5 (Alertmanager → Slack), and Sprint 6 (Grafana dashboard).
-
-**How to run Sprint 1 end-to-end:**
-
-```bash
-# 1. Provision the EKS cluster (eksctl: VPC + EKS + node group + EBS CSI + ingress-nginx)
-./scripts/01-provision-eks.sh
-
-# 2. Review/update secrets (see docs/SECRETS.md)
-#    - gratitude-k8s/database-secret.yml
-#    - gratitude-k8s/openai-api-secret.yml
-
-# 3. Deploy GratitudeApp using its existing Docker Hub images
-./scripts/02-deploy-gratitudeapp.sh
-
-# 4. Build the health-checker image and push it to ECR
-./scripts/00-build-and-push-healthchecker.sh
-# -> copy the printed image URI into deploy/healthchecker/deployment.yaml's
-#    `image:` field, replacing <YOUR_ECR_OR_DOCKERHUB_IMAGE>
-
-# 5. Deploy the health-checker + Prometheus/Grafana/Alertmanager stack
-./scripts/03-deploy-monitoring.sh
-
-# 6. Verify everything
-kubectl get pods
-kubectl get ingress
-
-# Health-checker API:
-kubectl port-forward -n default svc/health-checker-cluster-ip-service 8000:8000 &
-curl http://localhost:8000/api/summary
-
-# GratitudeApp (via ingress NLB) — get the external hostname:
-kubectl get svc -n ingress-nginx ingress-nginx-controller
-
-# Grafana:
-kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80 &
-# open http://localhost:3000 (admin / changeme)
-
-# 7. When done with screenshots/demo, tear everything down
-./scripts/99-teardown.sh
-```
-
-**Deliverable:** eksctl-provisioned EKS cluster on AWS (with EBS CSI
-driver, OIDC, and ingress-nginx), GratitudeApp's 9 microservices +
-Postgres running and reachable via ingress, RBAC configured for the
-health-checker ServiceAccount, a FastAPI health-checker deployed to the
-cluster that successfully lists GratitudeApp's nodes/pods/deployments
-via the Kubernetes API, and a running Prometheus/Grafana/Alertmanager
-stack in the `monitoring` namespace.
-
----
+**Reference:** [Minikube deployment and verification guide](docs/minikube_implementation/Readme_Local.md).
 
 ### Sprint 2: Health Monitoring Module (Node & Pod Checks)
 
-**Goal:** Enable basic health checks on nodes and pods and set up
-alerts for critical issues.
+**Goal:** Expand node and pod visibility and detect degraded application services.
 
-**Work scope:**
-- Extend `monitor.py`'s checks: add per-pod readiness/condition
-  detail, and per-deployment "all replicas available" status for each
-  GratitudeApp service (client, api-gateway, entries, moods, stats,
-  files-service, server-main, postgres).
-- Add Grafana dashboards (provisioned via the Helm values'
-  `dashboardsConfigMaps` or a `ConfigMap` with `grafana_dashboard:
-  "1"` label) visualizing node/pod health and GratitudeApp service
-  availability.
-- Define initial Alertmanager rules for thresholds (e.g. node
-  NotReady > 2 minutes, any GratitudeApp deployment with
-  available < desired replicas for > 1 minute, pod restart count >
-  N).
+**Implementation on Minikube:**
 
----
+- Extended pod API responses with readiness and condition details, and added
+  `healthchecker_pod_ready` and
+  `healthchecker_deployment_all_replicas_available` metrics.
+- Rebuilt and redeployed the local health-checker image with the monitoring
+  changes.
+- Added `k8s-health-checker/deploy/grafana/node-pod-health-dashboard.yaml` as
+  a dashboard ConfigMap discovered by Grafana's sidecar.
+- Added `k8s-health-checker/deploy/alerts/gratitudeapp-alerts.yaml` for
+  node, pod, and deployment health alerts.
+- Documented checks for Prometheus scraping, dashboard visibility, and the
+  alert lifecycle using a temporary deployment scale-down followed by restore.
+
+**Result:** Local readiness metrics, a node/pod health dashboard, and health
+alert rules alongside the original cluster inventory endpoints.
+
+**Reference:** [Sprint 2 local implementation and verification](docs/minikube_implementation/Readme_Local_Sprint2.md).
 
 ### Sprint 3: Self-Healing Mechanisms (Pod Recovery)
 
-**Goal:** Automate pod recovery processes and ensure that self-healing
-actions are logged for transparency.
+**Goal:** Recover unhealthy application pods and record the recovery actions.
 
-**Work scope:**
-- Add a self-healing module to `healthchecker-app/` that detects and
-  restarts/deletes unresponsive or failed GratitudeApp pods (using
-  `delete` on pods owned by a Deployment, letting the ReplicaSet
-  recreate them).
-- Add automated cleanup for pods stuck in `CrashLoopBackOff` or
-  `Evicted` states.
-- **Use the existing `chaos/` AWS FIS templates** to deliberately
-  inject failures (e.g. `fis-template.json` applies CPU stress to
-  `server-deployment` pods) and validate that the health-checker
-  detects and recovers from them — applying `chaos/rbac.yml` and the
-  FIS service-account/role manifests sets up the permissions FIS needs.
-- Implement structured audit logging of every healing action taken
-  (what, when, why, result), exposed via a new `/api/healing-log`
-  endpoint.
+**Implementation on Minikube:**
 
----
+- Added `healer.py` and integrated healing scans with the monitoring poller.
+  The recovery logic deletes qualifying unhealthy workload pods so their
+  Kubernetes controllers can recreate them, and cleans up evicted pods.
+- Added a per-workload cooldown to limit repeated healing actions.
+- Exposed structured action history through `/api/healing-log`, on-demand
+  scans through `/api/heal`, and action counts through
+  `healthchecker_healing_actions_total`.
+- Used local crash-loop and evicted-pod scenarios to exercise recovery and
+  inspect the audit log and metrics. The guide also describes a local CPU
+  stress simulation.
+- Prepared AWS FIS templates and permissions for the later EKS environment;
+  AWS FIS itself was not available on Minikube.
+
+**Result:** Pod recovery and an observable healing audit trail on the local
+cluster, with AWS-specific chaos testing covered by the EKS runbook.
+
+**Reference:** [Sprint 3 local recovery and failure-testing guide](docs/minikube_implementation/Readme_Local_Sprint3.md).
 
 ### Sprint 4: Advanced Self-Healing (Node Scaling & Resource Balancing)
 
-**Goal:** Ensure the system can scale and balance resources
-automatically, optimizing cluster performance and cost.
+**Goal:** Add workload autoscaling configuration and visibility into resource
+capacity and pod distribution.
 
-**Work scope:**
-- Integrate the Kubernetes Cluster Autoscaler (or Karpenter) on EKS so
-  the node group (min 1 / max 3, already configured in
-  `eksctl/cluster.yaml`) can scale up/down based on demand.
-- Configure Horizontal Pod Autoscalers for GratitudeApp's
-  higher-traffic services (e.g. `api-gateway`, `client`).
-- Add resource-balancing logic to redistribute pods across nodes.
-- Load-test these behaviors with a temporary load-generator
-  deployment hitting the ingress endpoint, and screenshot the
-  resulting scale-out/scale-in events.
+**Implementation on Minikube:**
 
----
+- Added workload CPU/memory requests and limits and CPU-based HPA definitions
+  for the API gateway, client, and server deployments, using metrics-server.
+- Added `balancer.py` to report per-node pod counts, allocatable CPU, workload
+  distribution, and a cluster balance ratio through metrics and
+  `/api/node-balancing`.
+- Added the load-generator manifest and documented load testing and HPA
+  scale-out/scale-in checks on the local cluster.
+- Kept AWS node-group scaling separate: the Cluster Autoscaler manifest is an
+  EKS integration requiring cloud configuration, rather than a local
+  Minikube node-scaling mechanism.
+
+**Result:** Local HPA configuration and resource distribution reporting.
+The balance module reports distribution; it does not actively move pods.
+The current checked-in HPAs cap replicas at **1**, so reproducing scale-out
+requires increasing their maximum replica counts.
+
+**Reference:** [Sprint 4 local autoscaling and resource reporting guide](docs/minikube_implementation/Readme_Local_Sprint4.md).
 
 ### Sprint 5: Alerting and Notification System Integration
 
-**Goal:** Implement a comprehensive alerting and notification system to
-keep the team informed of critical events and actions.
+**Goal:** Notify the team about degraded health and automated recovery actions.
 
-**Work scope:**
-- Add a Slack notifier module to `healthchecker-app/` using the Slack
-  API (incoming webhook) for real-time notifications.
-- Configure Alertmanager routing/receivers for multiple severity
-  levels (info/warning/critical), pointing at the Slack webhook.
-- End-to-end test alert delivery for both monitoring alerts (e.g. a
-  GratitudeApp deployment going unavailable) and self-healing action
-  notifications (e.g. "restarted pod X due to CrashLoopBackOff").
-- Document alert setup and customization in `docs/`.
+**Implementation on Minikube:**
 
----
+- Added `slack_notifier.py` for formatted notifications, including healing
+  events, with mock mode when no webhook is supplied and live mode when a
+  Slack incoming webhook is configured.
+- Exposed `/api/notify/slack` for test messages and `/api/notifications` for
+  recent notification history.
+- Added severity-based Alertmanager routing and receiver configuration under
+  `k8s-health-checker/deploy/alerts/`, alongside the Prometheus alert rules.
+- Documented test notifications, healing notifications, and monitoring-alert
+  delivery checks. Live Slack delivery depends on configuring the webhook
+  separately for the health-checker and Alertmanager.
+
+**Result:** Two notification paths: direct health-checker action notifications
+and Prometheus alerts routed through Alertmanager.
+
+**Reference:** [Sprint 5 local notification guide](docs/minikube_implementation/Readme_Local_Sprint5.md)
+and [alerting configuration](docs/alerting-and-notifications.md).
 
 ### Sprint 6: Web Dashboard and Project Documentation
 
-**Goal:** Deliver a user-friendly dashboard for monitoring cluster
-health and document the project for deployment in real-world
-environments.
+**Goal:** Bring the monitoring features together in a full observability
+view and document operation of the local stack.
 
-**Work scope:**
-- Build out Grafana dashboards showing live health status of
-  GratitudeApp's services, historical trends, and auto-healing/FIS
-  experiment logs.
-- Wire Prometheus metrics and alert/action history into the dashboard.
-- Write full user documentation: setup, configuration, usage, and
-  troubleshooting guides (building on `docs/SECRETS.md`).
-- Final end-to-end testing on EKS, screenshot capture (including a
-  full GratitudeApp demo via the ingress URL, Grafana dashboards, and
-  a chaos-experiment-triggered self-healing event), and teardown via
-  `scripts/99-teardown.sh`.
+**Implementation on Minikube:**
+
+- Added `k8s-health-checker/deploy/grafana/sprint6-full-dashboard.yaml` as a
+  sidecar-discovered Grafana dashboard ConfigMap, alongside the Sprint 2
+  dashboard.
+- Combined node readiness, pod health, replica availability, healing counts,
+  historical trends, HPA state, active alerts, and cluster balance metrics
+  in the full observability dashboard.
+- Documented dashboard access through port-forwarding and final checks of
+  the application, health-checker API, Prometheus targets, alerts, and
+  notification behavior.
+- Added user and alerting guides covering setup, configuration, operation,
+  troubleshooting, and local cleanup.
+
+**Result:** A documented local monitoring and self-healing stack covering all
+six sprints, forming the baseline subsequently transferred to EKS.
+
+**Reference:** [Sprint 6 local dashboard and final verification guide](docs/minikube_implementation/Readme_Local_Sprint6.md)
+and [user guide](docs/user-guide.md).
 
 ---
 
 ## Implementation and Migration: Minikube to EKS
 
-The sprint section above describes the original scope of work. **All six sprints were implemented first
-on Minikube and then transferred to EKS**; the implementation and migration
-references below describe that sequence separately from the plan.
+The sprint section above describes the local implementation. **All six sprints
+were implemented first on Minikube and then transferred to EKS**. The references
+below connect each local implementation to its EKS deployment runbook.
 
 ### Phase 1: Implement all sprints on Minikube
 
